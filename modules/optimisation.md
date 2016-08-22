@@ -98,7 +98,7 @@ Profiling Your Code
   import pstats
   p=pstats.Stats(cp)
   Ltime=[p.stats[x] for x in p.stats if x[2]=="Laplacian"][0][2]
-  LGF=(SIZE-2)**3*15
+  LGF=(SIZE-2)**3*17
   print("Laplacian executed in {time} at {GFps} GF/s".format(time=Ltime, GFps=LGF/Ltime/1e9))
 ```
 
@@ -203,6 +203,29 @@ First Shot at Optimising the Laplacian
 -   We'll forget about the other bits for now (we could not optimise the FFTs anyway)
 
 ``` {.python}
+  import numpy
+  import scipy
+  import scipy.fftpack 
+  import cProfile
+  import time as timemod
+  import pstats
+
+  def Laplacian(data, lapl, d):
+      for ii in range(1,data.shape[0]-1):
+          for jj in range(1,data.shape[1]-1):
+              for kk in range(1,data.shape[2]-1):
+                  lapl[ii,jj,kk] = (
+                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])/(d[0]*d[0]) +
+                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])/(d[1]*d[1]) +
+                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])/(d[2]*d[2]))
+      return
+
+  def Init(size):
+      d=numpy.array([0.1,0.1,0.1])
+      data=numpy.random.random([size]*3)
+      lapl=numpy.zeros_like(data)
+      return {"data": data, "laplacian": lapl, "lattice_spacing": d}
+
   def Laplacian2(data, lapl, d):
       lapl = (
           (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/(d[0]*d[0]) +
@@ -210,25 +233,27 @@ First Shot at Optimising the Laplacian
           (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/(d[2]*d[2]))
       return
 
-  LGF=(SIZE-2)**3*15
-
   def RunOne(prof, func, *args):
       prof.runcall(func, *args)
+      return
 
-  def GetLtime(prof):
-      p=pstats.Stats(prof)
-      Ltime=[p.stats[x] for x in p.stats if x[2].startswith("Laplacian")][0][2]
+  def GetLtime(prof, function):
+      p=pstats.Stats(prof[function])
+      Ltime=[p.stats[x] for x in p.stats if x[2].startswith(function) or x[2].startswith("<"+function)][0][2]
       return Ltime
 
-  def RunSome(funcs):
+  def RunSome(funcflops):
       variables = Init(SIZE)
       cp={}
       times={}
-      for function in funcs:
+      funcs = [func["func"] for func in funcflops]
+      for funcflop in funcflops:
+          function=funcflop["func"]
+          LGF=funcflop["flop"]
           cp[function]=cProfile.Profile()
           RunOne(cp[function], eval(function), variables["data"], variables["laplacian"], variables["lattice_spacing"])
-          times[function] = GetLtime(cp[function])
-          print("{func} executed in {time} at {GFps} GF/s".format(func=function, time=Ltime, GFps=LGF/Ltime/1e9))
+          times[function] = GetLtime(cp,function)
+          print("{func} executed in {time} at {GFps} GF/s".format(func=function, time=times[function], GFps=LGF/times[function]/1e9))
       print("Speedup between {f0} and {fN}: {slowfast}".format(slowfast=times[funcs[0]]/times[funcs[-1]],
                                                                f0=funcs[0], fN=funcs[-1]))
       if (len(times)>1):
@@ -236,7 +261,9 @@ First Shot at Optimising the Laplacian
                                                                fNm1=funcs[-2], fN=funcs[-1]))
       return (cp,times)
 
-  results = RunSome(["Laplacian", "Laplacian2"])
+  SIZE=100
+  results = RunSome([{"func":"Laplacian", "flop":(SIZE-2)**3*17},
+                     {"func":"Laplacian2", "flop":(SIZE-2)**3*17}])
 ```
 
 -   **Rule \#1**: never use a `for` loop to operate on a numpy array
@@ -256,67 +283,82 @@ Node level optimisation: Use the Cores: multi- and manycore architectures
 TODO!!! I'm here C+Python = Cython: an optimised RHS
 ----------------------------------------------------
 
+-   First, let's do a very simple "loop invariant motion" optimisation:
+-   note that `d[i]` are the same for each point, so no point in recalculating their squares every time
+    -   on C/C++/Fortran the compiler will *in principle* do this for you but it often fails so best do it by hand anyway
+-   also have to adjust the `LGF` variable
+-   we also forget about the poorly performing `Laplacian`:
+    -   the better optimised versions of the code will be so much faster than `Laplacian` that using `SIZE=100` becomes impossible
+    -   but we do not want to wait for those 10 minutes or so it takes to compute `SIZE=400`
+    -   we choose 400 because that's about the biggest we can fit in the memory of a single core on most HPDA hardware
+
 ``` {.python}
-  import numpy
-  import cProfile
-  import time as timemod
-
-  def init_data(sizes):
-      return numpy.random.random(sizes)
-
-  def Laplacian(data, lapl, d):
+  def Laplacian3(data, lapl, d):
+      dx2, dy2, dz2 = d[0]*d[0], d[1]*d[1], d[2]*d[2]
       lapl = (
-          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/d[0]*d[1]*d[2] +
-          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/d[1]*d[0]*d[2] +
-          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/d[2]*d[0]*d[1])
+          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/dx2 +
+          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/dy2 +
+          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/dz2)
       return
 
-  def runone(func):
-      d=numpy.array([0.1,0.1,0.1])
-      data=init_data((400,400,400))
-      lapl=numpy.zeros_like(data)
-      cp=cProfile.Profile()
-      start = timemod.clock()
-      cp.runcall(func, data, lapl, d)
-      end = timemod.clock()
-      print("cProfile gave total time of {time} s and the following profile.".format(time=end-start))
-      cp.print_stats()
-
-  L=runone(Laplacian)
+  SIZE=400
+  results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
+                     {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3}])
 ```
 
--   do not even try to do this in python without numpy: your runtime will go through the roof, oceans will dry, Sun will become a red giant, and quite probably the Universe suffer a heat death before your code returns (an over 100x speedup would not be unexpected)
+-   well, that wasn't much, but about 1% without really doing anything is not a bad start (on top of that 100x earlier)
+-   do not even try to do `SIZE=400` with the for-loops: your runtime will go through the roof, oceans will dry, Sun will become a red giant, and quite probably the Universe suffer a heat death before your code returns (an over 100x speedup would not be unexpected)
 -   but even with numpy this leaves room for improvement:
     -   it is still python with all the overhead an interpreted language implies
     -   it uses a single core only
     -   N.B. numpy's and scipy's BLAS and LAPACK routines (numpy.linalg, scipy.linalg) and possibly some others will use an external library to do the maths: if this library uses many cores, you get the benefit for free
--   an improved version using *cython*
+    -   the code as it stands also happens to be bound by the speed of the MEMORY, not the CPU
+    -   we have no idea how well the caches are used (would need to profile using more sophisticated tools)
+-   next, we'll write an improved version using *cython*
     -   N.B. only ipython and jupyter can run this: normal python cannot
     -   we will deal with plain python later
 -   a look at the code
-    -   everything from `%%cython` to the next empty line will be saved to a tepmorary file, turned into a C code using cython and then compiled into a python module which is then imported
+    -   everything from `%%cython` to the next empty line will be saved to a temporary file, turned into a C code using cython and then compiled into a python module which is then imported
     -   when cython runs, it does not see our current namespace (it is a separate process), so we need to import whatever we use
     -   there is also a special `cimport` command, which imports "into C code"
-    -   the `@cython` lines are *decorators* which affect how cython treats the following function: we want no bounds checking on our arrays and we want \(1/0\) to produce \(\infty\) instead of python's `ZeroDivisionError`
+    -   the `@cython` lines are decorators defined in cython which affect how cython treats the following function: we want no bounds checking on our arrays and we want \(1/0\) to produce \(\infty\) instead of python's `ZeroDivisionError`
     -   this is more or less standard cython preamble
-    -   notice also the type definitions in the function definition: **always** type **everything** in cython as if you do not, cython treats them as pytohn objects with all the performance penalty that implies
+    -   notice also the type definitions in the function definition: **always** type **everything** in cython as if you do not, cython treats them as python objects with all the performance penalty that implies
 -   we'll also introduce the right datatypes: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian
 
 ``` {.python}
-  %load_ext Cython
-  %%cython
   import cython,numpy
   cimport numpy
   @cython.boundscheck(False)
   @cython.cdivision(True)
-  def cyLaplacian(object[double, ndim=3] data, object[double, ndim=3] lapl, object[double, ndim=1] d):
+  def cyLaplacian1(object[double, ndim=3] data, object[double, ndim=3] lapl, object[double, ndim=1] d):
+      cdef double dx2
+      cdef double dy2
+      cdef double dz2
+      dx2 = d[0]*d[0]
+      dy2 = d[1]*d[1]
+      dz2 = d[2]*d[2]
       lapl = (
-          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/d[0]*d[1]*d[2] +
-          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/d[1]*d[0]*d[2] +
-          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/d[2]*d[0]*d[1])
+          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/dx2 +
+          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/dy2 +
+          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/dz2)
       return
+```
 
-  L=runone(cyLaplacian)
+``` {.python}
+  %%bash
+  cat ../codes/python/cyLaplacian.pyx
+```
+
+``` {.python}
+  import pyximport
+  pyximport.install()
+  import sys
+  sys.path = ["./codes/python"]+sys.path
+  import cyLaplacian
+  results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
+                     {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3},
+                     {"func":"cyLaplacian.cyLaplacian1", "flop":(SIZE-2)**3*14+3}])
 ```
 
 -   that was not an impressive result: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian: perhaps that was the cause? Let us define them more correctly.
