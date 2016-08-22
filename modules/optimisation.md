@@ -209,8 +209,9 @@ First Shot at Optimising the Laplacian
   import cProfile
   import time as timemod
   import pstats
+  import os
 
-  def Laplacian1(data, lapl, d):
+  def Laplacian1(data, lapl, d, N):
       for ii in range(1,data.shape[0]-1):
           for jj in range(1,data.shape[1]-1):
               for kk in range(1,data.shape[2]-1):
@@ -226,7 +227,7 @@ First Shot at Optimising the Laplacian
       lapl=numpy.zeros_like(data)
       return {"data": data, "laplacian": lapl, "lattice_spacing": d}
 
-  def Laplacian2(data, lapl, d):
+  def Laplacian2(data, lapl, d, N):
       lapl[1:-1,1:-1,1:-1] = (
           (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/(d[0]*d[0]) +
           (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/(d[1]*d[1]) +
@@ -244,6 +245,7 @@ First Shot at Optimising the Laplacian
 
   def RunSome(funcflops):
       variables = Init(SIZE)
+      threads = int(os.environ["OMP_NUM_THREADS"])
       cp={}
       times={}
       funcs = [func["func"] for func in funcflops]
@@ -252,7 +254,7 @@ First Shot at Optimising the Laplacian
           LGF=funcflop["flop"]
           cp[function]=cProfile.Profile()
           start = timemod.clock()
-          RunOne(cp[function], eval(function), variables["data"], variables["laplacian"], variables["lattice_spacing"])
+          RunOne(cp[function], eval(function), variables["data"], variables["laplacian"], variables["lattice_spacing"], threads)
           end = timemod.clock()
           times[function] = GetLtime(cp,function)
           print("{func} executed in {time} (or {timemod}) at {GFps} GF/s".format(func=function,
@@ -298,7 +300,7 @@ C+Python = Cython: an optimised RHS
     -   we choose 400 because that's about the biggest we can fit in the memory of a single core on most HPDA hardware
 
 ``` {.python}
-  def Laplacian3(data, lapl, d):
+  def Laplacian3(data, lapl, d, N):
       dx2, dy2, dz2 = 1./(d[0]*d[0]), 1./(d[1]*d[1]), 1./(d[2]*d[2])
       lapl[1:-1,1:-1,1:-1] = (
           (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])*dx2 +
@@ -339,7 +341,7 @@ C+Python = Cython: an optimised RHS
 
 ``` {.python}
   import pyximport
-  pyximport.install()
+  pyximport.install(setup_args={'include_dirs': numpy.get_include()})
   import sys
   sys.path = ["../codes/python"]+sys.path
   import cyLaplacian1
@@ -406,6 +408,11 @@ C+Python = Cython: an optimised RHS
 ```
 
 -   but that's just one core: let's bring on the clon... I mean others!
+
+``` {.python}
+  %%bash
+  cat ../codes/python/cyLaplacian5.pyx
+```
 
 ``` {.python}
   import cyLaplacian6

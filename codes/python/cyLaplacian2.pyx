@@ -6,7 +6,7 @@ ctypedef numpy.float64_t DTYPE_t
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def cyLaplacian2(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl,
-                 numpy.ndarray[DTYPE_t, ndim=1] d):
+                 numpy.ndarray[DTYPE_t, ndim=1] d, int N):
     cdef double dx2
     cdef double dy2
     cdef double dz2

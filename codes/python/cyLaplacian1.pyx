@@ -3,7 +3,7 @@ import cython,numpy
 cimport numpy
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def cyLaplacian1(object[double, ndim=3] data, object[double, ndim=3] lapl, object[double, ndim=1] d):
+def cyLaplacian1(object[double, ndim=3] data, object[double, ndim=3] lapl, object[double, ndim=1] d, int N):
     cdef double dx2
     cdef double dy2
     cdef double dz2

@@ -5,7 +5,7 @@ DTYPE=numpy.float64
 ctypedef numpy.float64_t DTYPE_t
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def cyLaplacian3(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
+def cyLaplacian3(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d, int N):
     cdef int xmax = data.shape[0]
     cdef int ymax = data.shape[1]
     cdef int zmax = data.shape[2]
