@@ -308,3 +308,7 @@ Random Numbers
 -   foobar
 -   The petsc4py TS example achieves 3.5% of peak performance for the whole routine on an Ivy Bridge class cpu.
     -   the "computational kernel" is significantly better
+        -   but since we are mostly interested in OpenMP's SIMD and offload capabilities, we'll cover them very quickly
+
+### our RHS
+

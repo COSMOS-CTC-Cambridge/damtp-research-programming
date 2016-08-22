@@ -6,7 +6,7 @@ import cProfile
 import time as timemod
 import pstats
 
-def Laplacian(data, lapl, d):
+def Laplacian1(data, lapl, d):
     for ii in range(1,data.shape[0]-1):
         for jj in range(1,data.shape[1]-1):
             for kk in range(1,data.shape[2]-1):
@@ -23,7 +23,7 @@ def Init(size):
     return {"data": data, "laplacian": lapl, "lattice_spacing": d}
 
 def Laplacian2(data, lapl, d):
-    lapl = (
+    lapl[1:-1,1:-1,1:-1] = (
         (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/(d[0]*d[0]) +
         (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/(d[1]*d[1]) +
         (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/(d[2]*d[2]))
@@ -47,9 +47,14 @@ def RunSome(funcflops):
         function=funcflop["func"]
         LGF=funcflop["flop"]
         cp[function]=cProfile.Profile()
+        start = timemod.clock()
         RunOne(cp[function], eval(function), variables["data"], variables["laplacian"], variables["lattice_spacing"])
+        end = timemod.clock()
         times[function] = GetLtime(cp,function)
-        print("{func} executed in {time} at {GFps} GF/s".format(func=function, time=times[function], GFps=LGF/times[function]/1e9))
+        print("{func} executed in {time} (or {timemod}) at {GFps} GF/s".format(func=function,
+                                                                               time=times[function],
+                                                                               GFps=LGF/times[function]/1e9,
+                                                                               timemod=end-start))
     print("Speedup between {f0} and {fN}: {slowfast}".format(slowfast=times[funcs[0]]/times[funcs[-1]],
                                                              f0=funcs[0], fN=funcs[-1]))
     if (len(times)>1):
@@ -58,26 +63,47 @@ def RunSome(funcflops):
     return (cp,times)
 
 SIZE=100
-results = RunSome([{"func":"Laplacian", "flop":(SIZE-2)**3*17},
-                   {"func":"Laplacian2", "flop":(SIZE-2)**3*17}])
+RunList=[{"func":"Laplacian2", "flop":(SIZE-2)**3*17}]
+results = RunSome([{"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
 
 def Laplacian3(data, lapl, d):
-    dx2, dy2, dz2 = d[0]*d[0], d[1]*d[1], d[2]*d[2]
-    lapl = (
-        (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/dx2 +
-        (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/dy2 +
-        (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/dz2)
+    dx2, dy2, dz2 = 1./(d[0]*d[0]), 1./(d[1]*d[1]), 1./(d[2]*d[2])
+    lapl[1:-1,1:-1,1:-1] = (
+        (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])*dx2 +
+        (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])*dy2 +
+        (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])*dz2)
     return
 
-SIZE=400
-results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
-                   {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3}])
+SIZE=200
+RunList.append({"func":"Laplacian3", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
 
 import pyximport
 pyximport.install()
 import sys
-sys.path = ["./codes/python"]+sys.path
-import cyLaplacian
-results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
-                   {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3},
-                   {"func":"cyLaplacian.cyLaplacian1", "flop":(SIZE-2)**3*14+3}])
+sys.path = ["../codes/python"]+sys.path
+import cyLaplacian1
+RunList.append({"func":"cyLaplacian1.cyLaplacian1", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
+
+import cyLaplacian2
+RunList.append({"func":"cyLaplacian2.cyLaplacian2", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
+
+import cyLaplacian3
+RunList.append({"func":"cyLaplacian3.cyLaplacian3", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
+
+import cyLaplacian4
+RunList.append({"func":"cyLaplacian4.cyLaplacian4", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
+
+import cyLaplacian5
+RunList.append({"func":"cyLaplacian5.cyLaplacian5", "flop":(SIZE-2)**3*14+3})
+results = RunSome(RunList)
+
+import cyLaplacian6
+SIZE=500
+RunList.append({"func":"cyLaplacian6.cyLaplacian6", "flop":(SIZE-2)**3*14+3})
+RunList = [{"func":x["func"], "flop":(SIZE-2)**3*14+3} for x in RunList[1:]]
+results = RunSome(RunList)

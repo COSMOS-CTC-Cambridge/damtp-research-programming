@@ -1100,7 +1100,7 @@ First Shot at Optimising the Laplacian
   import time as timemod
   import pstats
 
-  def Laplacian(data, lapl, d):
+  def Laplacian1(data, lapl, d):
       for ii in range(1,data.shape[0]-1):
           for jj in range(1,data.shape[1]-1):
               for kk in range(1,data.shape[2]-1):
@@ -1117,7 +1117,7 @@ First Shot at Optimising the Laplacian
       return {"data": data, "laplacian": lapl, "lattice_spacing": d}
 
   def Laplacian2(data, lapl, d):
-      lapl = (
+      lapl[1:-1,1:-1,1:-1] = (
           (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/(d[0]*d[0]) +
           (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/(d[1]*d[1]) +
           (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/(d[2]*d[2]))
@@ -1141,9 +1141,14 @@ First Shot at Optimising the Laplacian
           function=funcflop["func"]
           LGF=funcflop["flop"]
           cp[function]=cProfile.Profile()
+          start = timemod.clock()
           RunOne(cp[function], eval(function), variables["data"], variables["laplacian"], variables["lattice_spacing"])
+          end = timemod.clock()
           times[function] = GetLtime(cp,function)
-          print("{func} executed in {time} at {GFps} GF/s".format(func=function, time=times[function], GFps=LGF/times[function]/1e9))
+          print("{func} executed in {time} (or {timemod}) at {GFps} GF/s".format(func=function,
+                                                                                 time=times[function],
+                                                                                 GFps=LGF/times[function]/1e9,
+                                                                                 timemod=end-start))
       print("Speedup between {f0} and {fN}: {slowfast}".format(slowfast=times[funcs[0]]/times[funcs[-1]],
                                                                f0=funcs[0], fN=funcs[-1]))
       if (len(times)>1):
@@ -1152,8 +1157,8 @@ First Shot at Optimising the Laplacian
       return (cp,times)
 
   SIZE=100
-  results = RunSome([{"func":"Laplacian", "flop":(SIZE-2)**3*17},
-                     {"func":"Laplacian2", "flop":(SIZE-2)**3*17}])
+  RunList=[{"func":"Laplacian2", "flop":(SIZE-2)**3*17}]
+  results = RunSome([{"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
 ```
 
 -   **Rule \#1**: never use a `for` loop to operate on a numpy array
@@ -1170,8 +1175,8 @@ Node level optimisation: Use the Cores: multi- and manycore architectures
             -   this "nesting" of OpenMP is supported but does limit your options
     -   cython can do that in python, too and we'll soon see how
 
-TODO!!! I'm here C+Python = Cython: an optimised RHS
-----------------------------------------------------
+C+Python = Cython: an optimised RHS
+-----------------------------------
 
 -   First, let's do a very simple "loop invariant motion" optimisation:
 -   note that `d[i]` are the same for each point, so no point in recalculating their squares every time
@@ -1184,18 +1189,19 @@ TODO!!! I'm here C+Python = Cython: an optimised RHS
 
 ``` {.python}
   def Laplacian3(data, lapl, d):
-      dx2, dy2, dz2 = d[0]*d[0], d[1]*d[1], d[2]*d[2]
-      lapl = (
-          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/dx2 +
-          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/dy2 +
-          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/dz2)
+      dx2, dy2, dz2 = 1./(d[0]*d[0]), 1./(d[1]*d[1]), 1./(d[2]*d[2])
+      lapl[1:-1,1:-1,1:-1] = (
+          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])*dx2 +
+          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])*dy2 +
+          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])*dz2)
       return
 
-  SIZE=400
-  results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
-                     {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3}])
+  SIZE=200
+  RunList.append({"func":"Laplacian3", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
 ```
 
+-   the trick with redefining `dx2` and writing `*dx2` instead of `/dx2` has to do with the hardware: division is much slower than multiplication!
 -   well, that wasn't much, but about 1% without really doing anything is not a bad start (on top of that 100x earlier)
 -   do not even try to do `SIZE=400` with the for-loops: your runtime will go through the roof, oceans will dry, Sun will become a red giant, and quite probably the Universe suffer a heat death before your code returns (an over 100x speedup would not be unexpected)
 -   but even with numpy this leaves room for improvement:
@@ -1217,228 +1223,122 @@ TODO!!! I'm here C+Python = Cython: an optimised RHS
 -   we'll also introduce the right datatypes: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian
 
 ``` {.python}
-  import cython,numpy
-  cimport numpy
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  def cyLaplacian1(object[double, ndim=3] data, object[double, ndim=3] lapl, object[double, ndim=1] d):
-      cdef double dx2
-      cdef double dy2
-      cdef double dz2
-      dx2 = d[0]*d[0]
-      dy2 = d[1]*d[1]
-      dz2 = d[2]*d[2]
-      lapl = (
-          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/dx2 +
-          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/dy2 +
-          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/dz2)
-      return
-```
-
-``` {.python}
   %%bash
-  cat ../codes/python/cyLaplacian.pyx
+  cat ../codes/python/cyLaplacian1.pyx
 ```
 
 ``` {.python}
   import pyximport
   pyximport.install()
   import sys
-  sys.path = ["./codes/python"]+sys.path
-  import cyLaplacian
-  results = RunSome([{"func":"Laplacian2", "flop":(SIZE-2)**3*17},
-                     {"func":"Laplacian3", "flop":(SIZE-2)**3*14+3},
-                     {"func":"cyLaplacian.cyLaplacian1", "flop":(SIZE-2)**3*14+3}])
+  sys.path = ["../codes/python"]+sys.path
+  import cyLaplacian1
+  RunList.append({"func":"cyLaplacian1.cyLaplacian1", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
 ```
 
 -   that was not an impressive result: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian: perhaps that was the cause? Let us define them more correctly.
 
 ``` {.python}
-  %load_ext Cython
-  %%cython
-  import cython,numpy
-  cimport numpy
-  DTYPE=numpy.float64
-  ctypedef numpy.float64_t DTYPE_t
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  def cyLaplacian2(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      lapl[1:-1,1:-1,1:-1] = (
-          (data[0:-2,1:-1,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[2:,1:-1,1:-1])/d[0]*d[1]*d[2] +
-          (data[1:-1,0:-2,1:-1] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,2:,1:-1])/d[1]*d[0]*d[2] +
-          (data[1:-1,1:-1,0:-2] - 2*data[1:-1,1:-1,1:-1] + data[1:-1,1:-1,2:])/d[2]*d[0]*d[1])
-      return
-
-  L=runone(cyLaplacian2)
+  %%bash
+  cat ../codes/python/cyLaplacian2.pyx
 ```
 
--   that was not an impressive result: unfortunately as much as numpy likes array-operations, cython dislikes them
+``` {.python}
+  import cyLaplacian2
+  RunList.append({"func":"cyLaplacian2.cyLaplacian2", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
+```
+
+-   That was not an impressive result: unfortunately as much as numpy likes array-operations, cython dislikes them. They prevent cython from leaving python-land behind.
+-   **EXERCISE** run the last cell, repeating a few times:
+    -   do the relative speeds of the routines change?
+    -   if so, why?
+    -   if so, which one is actually the fastest and why?
 -   next we go back to explicit loops
 
 ``` {.python}
-  %load_ext Cython
-  %%cython
-  import cython,numpy
-  cimport numpy
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  def cyLaplacian3(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      cdef int xmax = data.shape[0]
-      cdef int ymax = data.shape[1]
-      cdef int zmax = data.shape[2]
-      cdef int ii, jj, kk
-      for ii in range(1,xmax-1):
-          for jj in range(1,ymax-1):
-              for kk in range(1,zmax-1):
-                  lapl[ii,jj,kk] = (
-                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])/d[0]*d[1]*d[2] +
-                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])/d[1]*d[0]*d[2] +
-                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])/d[2]*d[0]*d[1])
-      return
+  %%bash
+  cat ../codes/python/cyLaplacian3.pyx
+```
 
-  L=runone(cyLaplacian3)
+``` {.python}
+  import cyLaplacian3
+  RunList.append({"func":"cyLaplacian3.cyLaplacian3", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
 ```
 
 -   that's more like it, but can we do more? Without touching the code, not much, but we can see if the compiler can do better!
 -   cython can be told to pass flags to the compiler as follows
 
 ``` {.python}
-  %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-fno-unsafe-math-optimizations
-  import cython,numpy
-  cimport numpy
-  DTYPE=numpy.float64
-  ctypedef numpy.float64_t DTYPE_t
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  def cyLaplacian4(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      cdef int xmax = data.shape[0]
-      cdef int ymax = data.shape[1]
-      cdef int zmax = data.shape[2]
-      cdef int ii, jj, kk
-      for ii in range(1,xmax-1):
-          for jj in range(1,ymax-1):
-              for kk in range(1,zmax-1):
-                  lapl[ii,jj,kk] = (
-                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])/d[0]*d[1]*d[2] +
-                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])/d[1]*d[0]*d[2] +
-                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])/d[2]*d[0]*d[1])
-      return
-
-  L=runone(cyLaplacian4)
+  %%bash
+  diff -Naur ../codes/python/cyLaplacian3.pyxbld ../codes/python/cyLaplacian4.pyxbld
 ```
 
--   the final code modification we do is to reduce the number of operations per loop iteration: the lattice constant products can be precomputed
-    -   compiler will detect some such cases and move them out of the loop but it fails here
-
 ``` {.python}
-  %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-fno-unsafe-math-optimizations
-  import cython,numpy
-  cimport numpy
-  DTYPE=numpy.float64
-  ctypedef numpy.float64_t DTYPE_t
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  def cyLaplacian5(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      cdef int xmax = data.shape[0]
-      cdef int ymax = data.shape[1]
-      cdef int zmax = data.shape[2]
-      cdef int ii, jj, kk
-      cdef double d1d2bd0=1.0/d[0]*d[1]*d[2], d0d2bd1=1.0/d[1]*d[0]*d[2], d0d1bd2=1.0/d[2]*d[0]*d[1]
-      for ii in range(1,xmax-1):
-          for jj in range(1,ymax-1):
-              for kk in range(1,zmax-1):
-                  lapl[ii,jj,kk] = (
-                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*d1d2bd0 +
-                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*d0d2bd1 +
-                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*d0d1bd2)
-      return
-
-  L=runone(cyLaplacian5)
+  import cyLaplacian4
+  RunList.append({"func":"cyLaplacian4.cyLaplacian4", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
 ```
 
 -   python's integers gracefully overflow, C integers wrap around: we get an even bigger speedup by telling cython to conform to the C style, not python: `@cython.wraparound(False)`
 
 ``` {.python}
-  %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-fno-unsafe-math-optimizations
-  import cython,numpy
-  cimport numpy
-  DTYPE=numpy.float64
-  ctypedef numpy.float64_t DTYPE_t
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  @cython.wraparound(False)
-  def cyLaplacian6(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      cdef int xmax = data.shape[0]
-      cdef int ymax = data.shape[1]
-      cdef int zmax = data.shape[2]
-      cdef int ii, jj, kk
-      cdef double d1d2bd0=1.0/d[0]*d[1]*d[2], d0d2bd1=1.0/d[1]*d[0]*d[2], d0d1bd2=1.0/d[2]*d[0]*d[1]
-      for ii in range(1,xmax-1):
-          for jj in range(1,ymax-1):
-              for kk in range(1,zmax-1):
-                  lapl[ii,jj,kk] = (
-                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*d1d2bd0 +
-                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*d0d2bd1 +
-                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*d0d1bd2)
-      return
+  %%bash
+  cat ../codes/python/cyLaplacian5.pyx
+```
 
-  L=runone(cyLaplacian6)
+``` {.python}
+  import cyLaplacian5
+  RunList.append({"func":"cyLaplacian5.cyLaplacian5", "flop":(SIZE-2)**3*14+3})
+  results = RunSome(RunList)
+```
+
+-   but that's just one core: let's bring on the clon... I mean others!
+
+``` {.python}
+  import cyLaplacian6
+  SIZE=500
+  RunList.append({"func":"cyLaplacian6.cyLaplacian6", "flop":(SIZE-2)**3*14+3})
+  RunList = [{"func":x["func"], "flop":(SIZE-2)**3*14+3} for x in RunList[1:]]
+  results = RunSome(RunList)
 ```
 
 -   the timings on my laptop
 
 |function|best time (s)|
 |--------|-------------|
-|Laplacian|4.184|
-|cyLaplacian|4.200|
-|cyLaplacian2|4.364|
-|cyLaplacian3|0.852|
-|cyLaplacian4|0.845|
-|cyLaplacian5|0.312|
-|cyLaplacian6|0.240|
-|cyLaplacian6openmp|0.309|
+|Laplacian1|N/A|
+|Laplacian2|N/A|
+|Laplacian3|5.993|
+|cyLaplacian1|5.880|
+|cyLaplacian2|5.880|
+|cyLaplacian3|0.639|
+|cyLaplacian4|0.627|
+|cyLaplacian5|0.529|
+|cyLaplacian6|0.661|
 
--   but that's just one core: bring in the others (the last line in the table)
-    -   note that my timing includes thread creation overheads!
+-   note that my timing for `cyLaplacian6` includes thread creation overheads!
+    -   and has a horrible variance: the slowest time is over 1.4 seconds, whereas the non-threaded ones stay under 0.8 s
+    -   you will see different behaviour on cosmos or any other proper HPC hardware
+-   try changing the `num_threads` argument and see how this scales (you have 12 cores)
+
+### Unintended side-effect
+
+-   Memory consumption drops by 50% between `cyLaplacian2` and `cyLaplacian3`
 
 ``` {.python}
   %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-funsafe-math-optimizations --compile-args=-fopenmp --link-args=-fopenmp
-  import cython,numpy
-  from cython.parallel import prange, parallel
-  cimport numpy
-  DTYPE=numpy.float64
-  ctypedef numpy.float64_t DTYPE_t
-  @cython.boundscheck(False)
-  @cython.cdivision(True)
-  @cython.wraparound(False)
-  def cyLaplacian6openmp(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d):
-      cdef int xmax = data.shape[0]
-      cdef int ymax = data.shape[1]
-      cdef int zmax = data.shape[2]
-      cdef int ii, jj, kk
-      cdef double d1d2bd0=1.0/d[0]*d[1]*d[2], d0d2bd1=1.0/d[1]*d[0]*d[2], d0d1bd2=1.0/d[2]*d[0]*d[1]
-      with nogil, parallel(num_threads=2):
-      for ii in prange(1,xmax-1, schedule="static"):
-          for jj in range(1,ymax-1):
-                    for kk in range(1,zmax-1):
-                      lapl[ii,jj,kk] = (
-                          (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*d1d2bd0 +
-                          (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*d0d2bd1 +
-                          (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*d0d1bd2)
-                  return
-
-  runone(cyLaplacian6openmp)
 ```
-
-### our RHS
-
--   Jacobian, too; remember the FD checks!
 
 OpenMP/TBB
 ----------
 
 Vector Unit and GPU: SIMD/MIMD
 ------------------------------
+
+-   python has pyCUDA, OpenMP can offload as well as of version 4
 
 Choosing an Algorithm
 =====================
@@ -3083,6 +2983,10 @@ Random Numbers
 -   The petsc4py TS example achieves 3.5% of peak performance for the whole routine on an Ivy Bridge class cpu.
     -   the "computational kernel" is significantly better
         -   but since we are mostly interested in OpenMP's SIMD and offload capabilities, we'll cover them very quickly
+
+### our RHS
+
+-   Jacobian, too; remember the FD checks!
 
 ESP Cookbook/Project
 

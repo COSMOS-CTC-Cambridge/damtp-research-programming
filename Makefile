@@ -30,7 +30,7 @@ changebranch:
 	git clean -d --force
 	git checkout origin/master -- .
 
-processfiles: ${MDFILES} ${SRCFILES} ${PNGFILES}
+processfiles: changebranch ${MDFILES} ${SRCFILES} ${PNGFILES}
 	python3 codes/python/domain_decomp_scaling.py modules/images/domain_decomp_scaling.png
 
 ${SRCFILES} ${PNGFILES}: ${MDFILES}

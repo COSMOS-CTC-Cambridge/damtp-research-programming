@@ -1,0 +1,8 @@
+def make_ext(modname, pyxfilename):
+    from distutils.extension import Extension
+    return Extension(name=modname,
+                     sources=[pyxfilename],
+                     language="c",
+                     extra_compile_args=['-Ofast', '-fno-tree-loop-vectorize', '-fno-tree-slp-vectorize', '-fno-ipa-cp-clone', '-fopenmp'],
+                     libraries=['gomp'],
+                     extra_link_args=['--verbose', '-fopenmp', '-lgomp'])
