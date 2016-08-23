@@ -12,10 +12,11 @@ BRANCH=$(shell git symbolic-ref -q --short HEAD)
 all: release
 
 release: | checkbranch changebranch processfiles
-	rm -r ${ORGFILES}
-	find -name '*.org'|xargs rm
+	rm -fr ${ORGFILES}
+	find -name '*.org'|xargs rm -f
 	rm -rf APC524 GitSlides modules/MyRepo.orig modules/ServerRepo
 	git add -A
+	git status
 	git commit --message="Released at $(shell date --iso-8601=seconds)"
 
 checkbranch:
@@ -45,7 +46,7 @@ ${SRCFILES} ${PNGFILES}: ${MDFILES}
 	ipython3 codes/python/exportcleanup.py -- $@
 
 %.pdf: %.org
-	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)' --eval '(sit-for 5)'
+	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)' --eval '(sit-for 15)'
 
 cleanSRC:
 	rm -f ${SRCFILES} ${MDFILES} ${PNGFILES}
