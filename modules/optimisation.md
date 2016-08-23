@@ -55,7 +55,9 @@ Profiling Your Code
       return scipy.fftpack.ifftn(data)
 
   def WriteToFile(data):
-      data.tofile("ihopethisfiledoesnotexist.dat", sep=" ")
+      filename="ihopethisfiledoesnotexist.dat"
+      data.tofile(filename, sep=" ")
+      os.unlink(filename)
       return
 
   def RunProfile(size):
@@ -445,8 +447,46 @@ C+Python = Cython: an optimised RHS
 
 -   Memory consumption drops by 50% between `cyLaplacian2` and `cyLaplacian3`
 
+### Bits and pieces
+
+-   the examples involving `.pyx` files could be ran interactively as follows but then we have no clean way of running them non-interactively
+
+``` {.python}
+  %load_ext Cython
+```
+
+-   the above needs to be in its own cell before this
+
 ``` {.python}
   %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-funsafe-math-optimizations --compile-args=-fopenmp --link-args=-fopenmp
+  import cython,numpy,os
+  from cython.parallel import prange, parallel
+  cimport numpy
+  DTYPE=numpy.float64
+  ctypedef numpy.float64_t DTYPE_t
+  #@cython.profile(True)
+  #@cython.linetrace(True)
+  @cython.boundscheck(False)
+  @cython.cdivision(True)
+  @cython.wraparound(False)
+  def cyLaplacian6(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d, int N):
+      cdef int xmax = data.shape[0]
+      cdef int ymax = data.shape[1]
+      cdef int zmax = data.shape[2]
+      cdef int num_threads = N
+      cdef double dx2 = 1./(d[0]*d[0])
+      cdef double dy2 = 1./(d[1]*d[1])
+      cdef double dz2 = 1./(d[2]*d[2])
+      cdef int ii, jj, kk
+      with nogil, parallel(num_threads=num_threads):
+          for ii in prange(1,xmax-1,schedule="runtime"):
+              for jj in xrange(1,ymax-1):
+                  for kk in xrange(1,zmax-1):
+                      lapl[ii,jj,kk] = (
+                          (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*dx2 +
+                          (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*dy2 +
+                          (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*dz2)
+      return
 ```
 
 OpenMP/TBB

@@ -1,6 +1,7 @@
 ORGFILES=course.org plans.org slides.org todo.org modules/algorithms.org modules/io_viz.org modules/optimisation.org modules/practices.org modules/prototyping.org modules/python.org modules/requirements_for_environment.org modules/shell.org modules/mpi.org modules/unfinished.org
-MDFILES=course.md modules/algorithms.md modules/io_viz.md modules/optimisation.md modules/practices.md modules/prototyping.md modules/python.md modules/requirements_for_environment.md modules/shell.md modules/mpi.md modules/unfinished.md
+MDFILES=modules/algorithms.md modules/io_viz.md modules/optimisation.md modules/practices.md modules/prototyping.md modules/python.md modules/requirements_for_environment.md modules/shell.md modules/mpi.md modules/unfinished.md
 SRCFILES=codes/python/distributed_computing_interactive.py codes/python/ipyparallel_and_mathematica.py codes/python/mixed_mode_mapreduce.py codes/python/mpi_hello_world.py codes/python/profile_example.py
+PDFFIELS=course.pdf
 PNGFILES=modules/images/boundary_conditions.png modules/images/ghosts.png modules/images/MPI_subarray.png
 DELETEFILESONRELEASE = $(filter-out Makefile,$(wildcard *))
 
@@ -30,7 +31,7 @@ changebranch:
 	git clean -d --force
 	git checkout origin/master -- .
 
-processfiles: changebranch ${MDFILES} ${SRCFILES} ${PNGFILES}
+processfiles: changebranch ${MDFILES} ${SRCFILES} ${PNGFILES} ${PDFFILES}
 	python3 codes/python/domain_decomp_scaling.py modules/images/domain_decomp_scaling.png
 
 ${SRCFILES} ${PNGFILES}: ${MDFILES}
@@ -43,8 +44,11 @@ ${SRCFILES} ${PNGFILES}: ${MDFILES}
 	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-markdown_github)' --eval '(sit-for 5)'
 	ipython3 codes/python/exportcleanup.py -- $@
 
+%.pdf: %.org
+	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)' --eval '(sit-for 5)'
+
 cleanSRC:
-	rm ${SRCFILES} ${MDFILES} ${PNGFILES}
+	rm -f ${SRCFILES} ${MDFILES} ${PNGFILES}
 
 clean: cleanSRC
-	@find -name '*.tex' -o -name '*.pyc' -o -name '*~' -o -name '*.pdf' -o -name '*.md' |xargs echo
+	@find -name '*.tex' -o -name '*.pyc' -o -name '*.pyx' -o -name '*.pyxc' -o -name '*~' -o -name '*.pdf' -o -name '*.md' |grep -v APC|xargs echo

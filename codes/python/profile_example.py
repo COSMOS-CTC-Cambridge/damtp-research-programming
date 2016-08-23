@@ -38,7 +38,9 @@ def IFourier(data):
     return scipy.fftpack.ifftn(data)
 
 def WriteToFile(data):
-    data.tofile("ihopethisfiledoesnotexist.dat", sep=" ")
+    filename="ihopethisfiledoesnotexist.dat"
+    data.tofile(filename, sep=" ")
+    os.unlink(filename)
     return
 
 def RunProfile(size):
