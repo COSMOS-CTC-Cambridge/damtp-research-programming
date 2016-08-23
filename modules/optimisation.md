@@ -243,12 +243,15 @@ First Shot at Optimising the Laplacian
 
   def GetLtime(prof, function):
       p=pstats.Stats(prof[function])
-      Ltime=[p.stats[x] for x in p.stats if x[2].startswith(function) or x[2].startswith("<"+function)][0][2]
+      Ltime=[p.stats[x] for x in p.stats if x[2].startswith(function) or x[2].startswith("<"+function) or x[2].endswith(function+">")][0][2]
       return Ltime
 
   def RunSome(funcflops):
       variables = Init(SIZE)
-      threads = int(os.environ["OMP_NUM_THREADS"])
+      if ("OMP_NUM_THREADS" in os.environ):
+          threads = int(os.environ["OMP_NUM_THREADS"])
+      else:
+          threads = 1
       cp={}
       times={}
       funcs = [func["func"] for func in funcflops]
@@ -393,7 +396,7 @@ C+Python = Cython: an optimised RHS
 
 ``` {.python}
   import cyLaplacian4
-  RunList.append({"func":"cyLaplacian4.cyLaplacian4", "flop":(SIZE-2)**3*14+3})
+  RunList.append({"func":"cyLaplacian4.cyLaplacian3", "flop":(SIZE-2)**3*14+3})
   results = RunSome(RunList)
 ```
 
@@ -470,7 +473,7 @@ C+Python = Cython: an optimised RHS
   @cython.boundscheck(False)
   @cython.cdivision(True)
   @cython.wraparound(False)
-  def cyLaplacian6(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d, int N):
+  def cyLaplacian7(numpy.ndarray[DTYPE_t, ndim=3] data, numpy.ndarray[DTYPE_t, ndim=3] lapl, numpy.ndarray[DTYPE_t, ndim=1] d, int N):
       cdef int xmax = data.shape[0]
       cdef int ymax = data.shape[1]
       cdef int zmax = data.shape[2]
@@ -479,16 +482,49 @@ C+Python = Cython: an optimised RHS
       cdef double dy2 = 1./(d[1]*d[1])
       cdef double dz2 = 1./(d[2]*d[2])
       cdef int ii, jj, kk
-      with nogil, parallel(num_threads=num_threads):
-          for ii in prange(1,xmax-1,schedule="runtime"):
-              for jj in xrange(1,ymax-1):
-                  for kk in xrange(1,zmax-1):
-                      lapl[ii,jj,kk] = (
-                          (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*dx2 +
-                          (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*dy2 +
-                          (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*dz2)
+      #with nogil, parallel(num_threads=num_threads):
+      #    for ii in prange(1,xmax-1,schedule="runtime"):
+      for ii in xrange(1,xmax-1):
+          for jj in xrange(1,ymax-1):
+              for kk in xrange(1,zmax-1):
+                  lapl[ii,jj,kk] = (
+                        (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])*dx2 +
+                        (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])*dy2 +
+                        (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])*dz2 + 
+                        (data[ii-1,jj,kk]*data[ii,jj,kk] + data[ii-1,jj,kk]*data[ii+1,jj,kk] + data[ii+1,jj,kk]*data[ii,jj,kk] +
+                         data[ii,jj-1,kk]*data[ii,jj,kk] + data[ii,jj-1,kk]*data[ii,jj+1,kk] + data[ii,jj+1,kk]*data[ii,jj,kk] +
+                         data[ii,jj,kk-1]*data[ii,jj,kk] + data[ii,jj,kk-1]*data[ii,jj,kk+1] + data[ii,jj,kk]*data[ii,jj,kk+1] +
+                         data[ii-1,jj,kk-1]*data[ii,jj,kk-1] + data[ii-1,jj,kk-1]*data[ii+1,jj,kk-1] + data[ii+1,jj,kk-1]*data[ii,jj,kk-1] +
+                         data[ii,jj-1,kk-1]*data[ii,jj,kk-1] + data[ii,jj-1,kk-1]*data[ii,jj+1,kk-1] + data[ii,jj+1,kk-1]*data[ii,jj,kk-1] +
+                         data[ii-1,jj,kk-1]*data[ii,jj,kk-1] + data[ii,jj,kk-1]*data[ii-1,jj,kk+1] + data[ii,jj,kk]*data[ii-1,jj,kk+1])*dx2*dy2*dz2)
       return
 ```
+
+``` {.python}
+  AnotherRunList=[{"func":"cyLaplacian7", "flop":(SIZE-2)**3*(14+6*5+6+3)+3}]
+  RunSome(RunList[-1:]+AnotherRunList)
+```
+
+-   and finally a look at parallel efficiency
+
+``` {.python}
+  %matplotlib notebook
+```
+
+<span class="label">Thread-level Scaling of cyLaplacian6</span>
+``` {#fig:cyLaplacian6_scaling .python}
+  import matplotlib.pyplot as plt
+  results=[]
+  for threads in range(1,13):
+      os.environ["OMP_NUM_THREADS"]=str(threads)
+      results.append(RunSome(RunList[-1:]))
+  timedata = [x[1]['cyLaplacian6.cyLaplacian6'] for x in results]
+  threads = numpy.arange(1,len(timedata)+1)
+  timedata[0]/(timedata*threads)
+  plt.plot(threads, timedata[0]/(timedata*threads))
+```
+
+![](images/cyLaplacian6_scaling.png)
 
 OpenMP/TBB
 ----------

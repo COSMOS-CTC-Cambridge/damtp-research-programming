@@ -36,12 +36,15 @@ def RunOne(prof, func, *args):
 
 def GetLtime(prof, function):
     p=pstats.Stats(prof[function])
-    Ltime=[p.stats[x] for x in p.stats if x[2].startswith(function) or x[2].startswith("<"+function)][0][2]
+    Ltime=[p.stats[x] for x in p.stats if x[2].startswith(function) or x[2].startswith("<"+function) or x[2].endswith(function+">")][0][2]
     return Ltime
 
 def RunSome(funcflops):
     variables = Init(SIZE)
-    threads = int(os.environ["OMP_NUM_THREADS"])
+    if ("OMP_NUM_THREADS" in os.environ):
+        threads = int(os.environ["OMP_NUM_THREADS"])
+    else:
+        threads = 1
     cp={}
     times={}
     funcs = [func["func"] for func in funcflops]
@@ -97,7 +100,7 @@ RunList.append({"func":"cyLaplacian3.cyLaplacian3", "flop":(SIZE-2)**3*14+3})
 results = RunSome(RunList)
 
 import cyLaplacian4
-RunList.append({"func":"cyLaplacian4.cyLaplacian4", "flop":(SIZE-2)**3*14+3})
+RunList.append({"func":"cyLaplacian4.cyLaplacian3", "flop":(SIZE-2)**3*14+3})
 results = RunSome(RunList)
 
 import cyLaplacian5
@@ -109,3 +112,6 @@ SIZE=500
 RunList.append({"func":"cyLaplacian6.cyLaplacian6", "flop":(SIZE-2)**3*14+3})
 RunList = [{"func":x["func"], "flop":(SIZE-2)**3*14+3} for x in RunList[1:]]
 results = RunSome(RunList)
+
+AnotherRunList=[{"func":"cyLaplacian7", "flop":(SIZE-2)**3*(14+6*5+6+3)+3}]
+RunSome(RunList[-1:]+AnotherRunList)
