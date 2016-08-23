@@ -4,7 +4,6 @@ Profiling
 -   You've got a well designed, parallel, scalable code, but it still takes way too long to run.
 -   Please do use good programming practices as those will make optimising (and profiling) a lot easier
 
-
 Profiling Your Code
 -------------------
 
