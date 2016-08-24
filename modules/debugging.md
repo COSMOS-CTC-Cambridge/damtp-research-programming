@@ -51,7 +51,17 @@ Debugging python, the jupyter way
 -   you can also start from the beginning and proceed line-by-lien, as `python -m pdb something.py` and `pdb something.py` would do
 
 ``` {.python}
+  %%debug
+  import numpy
 
+  def pythagoras(x,y):
+      x = x**2
+      y = x**2
+      return (x+y)**0.5
+
+  a,b = numpy.random.random(2)
+  c = pythagoras(a, b)
+  print("a**2 + b**2 == c**2: {a} + {b} == {c}".format(a=a**2,b=b**2,c=c**2))
 ```
 
 -   in python, debugging rarely involves more than finding type errors and such where post-mortem is enough to reveal the cause or algorithmic errors where one usually needs to proceed step-by-step and make sure the algorithm does what one thinks it should
@@ -115,8 +125,7 @@ Debugging C/Fortran
 
 -   changing =ulimit=s is a one-way door: they can be increased *once* per session
 -   to get the post-mortem, do `gdb executablefilename corefilename`
--   to get line-by-line, one should either start the whole code inside a debugger, like `gdb
-         ../codes/cpp/c_segfaults` or start the program normally and later attach debugger with `gdb executablefilename processid`
+-   to get line-by-line, one should either start the whole code inside a debugger, like `gdb ../codes/cpp/c_segfaults1` or start the program normally and later attach debugger with `gdb executablefilename processid`
 -   additional useful command: `start` which begins the program (python debuggers skip this step)
 -   let's have a look at two buggy C codes
 
@@ -137,6 +146,7 @@ Debugging C/Fortran
   }
 ```
 
+-   you will have to compile and link this and the next example!
 -   why does this segfault? to fire up a `gdb` e.g. in the jupyter terminal
 -   another problematic fellow
 
