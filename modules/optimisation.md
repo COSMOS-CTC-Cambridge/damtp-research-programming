@@ -79,6 +79,7 @@ Profiling Your Code
 ```
 
 -   that was a bit long, wasn't it?
+    -   note how the `cumtime` and `tottime` work: the `cumtime` of a function equals its `tottime` plus the `cumtime` of any of its callees
     -   that code is intentionally *BAD*
     -   unfortunately we need it to be bad to see effects of our optimisation later on!
 -   TODO!!! Laplacian, but err... compute intensify it?
