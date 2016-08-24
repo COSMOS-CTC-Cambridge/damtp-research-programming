@@ -34,6 +34,9 @@ Debugging python, the standard way
 |up|u|go up one stack frame|
 |down|d|go down one stack frame|
 |until|u|Continue execution until the line with a number greater than the current one is reached or until the current frame returns|
+|return|return|Run until the end of current function|
+|start|start|Go to first line of user code (C/C++/Fortran debugger only)|
+|finish|finish|Run until the end of current function (C/C++/Fortran debugger only)|
 
 -   I rarely need more
 

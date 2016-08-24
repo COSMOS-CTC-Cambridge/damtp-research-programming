@@ -76,7 +76,7 @@ At this stage we need to define our physics. We use the Poisson equation here, b
 -   finally, a very inefficient loop setting the values: for most lattice points it is a `rhs_array[i,j,k] ` rhs<sub>array</sub>[i,j,k]= but this is only ran once, so not too important
 -   the non-trivial values are the boundary conditions (i.e. u=7), see plot
 
-![How a 2D slice at k=1 of the 3D data maps boundary conditions onto a 1D RHS vector; note that lattice points (i,j,k)=(1,1,0) and (1,1,2) also map to rhs(0) from outside the diagram.](file:images/boundary_conditions.png)
+![How a 2D slice at k=1 of the 3D data maps boundary conditions onto a 1D RHS vector; note that lattice points (i,j,k)=(1,1,0) and (1,1,2) also map to rhs(0) from outside the diagram.](images/boundary_conditions.png)
 
 `compute_operators()`  
 -   dealing with distributed matrices almost always starts with `A.zeroEntries()` and ends with `A.assemble()`
@@ -175,7 +175,7 @@ The solver would now normally be invoked with `ksp.solve(field,sol)` but we wrap
 
 ``` {.python}
   start = time.clock()
-  cProfile.run("ksp.solve(field,sol)")
+  cProfile.run("ksp.solve(field,sol)", sort="time")
   end = time.clock()
 ```
 

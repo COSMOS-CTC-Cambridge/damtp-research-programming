@@ -32,6 +32,7 @@ changebranch:
 	git clean -d --force
 	git checkout origin/master -- .
 	git pull
+	git checkout origin/master -- .
 
 processfiles: changebranch ${MDFILES} ${SRCFILES} ${PNGFILES} ${PDFFILES}
 	python3 codes/python/domain_decomp_scaling.py modules/images/domain_decomp_scaling.png

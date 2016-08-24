@@ -1,4 +1,3 @@
-
 def bottom_func(x):
     y = x**2
     return str(x) + " squared equals " + str(y)

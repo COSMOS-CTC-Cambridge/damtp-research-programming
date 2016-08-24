@@ -19,7 +19,7 @@ for infn in args.files:
                 if (re.match("^[\s]*-[\s].*", indata[lineidx-1])):
                     if (re.match("^[\s]*-[\s].*", indata[lineidx+1])):
                         continue
-            elif (re.search("![[]][(]file:", inline)):
+            elif (re.search("[(]file:", inline)):
                 inline=inline.replace("file:","")
             outdata.append(inline)
     open(infn,"w").writelines(outdata)
