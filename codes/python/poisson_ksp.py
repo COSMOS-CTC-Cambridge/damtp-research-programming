@@ -108,6 +108,9 @@ ksp = PETSc.KSP().create()
 
 ksp.setDM(dm)
 
+ksp.setType(PETSc.KSP().Type.PREONLY)
+ksp.getPC().setType(PETSc.PC().Type.LU)
+
 ksp.setComputeRHS(poisson_problem.rhs)
 ksp.setComputeOperators(poisson_problem.compute_operators)
 
