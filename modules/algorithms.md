@@ -27,6 +27,24 @@ Think Parallel
         -   Example: mergesort is easy to parallelise, heapsort is very inefficient in parallel
     -   It must be implemented such that it can exploit SIMD and many cores
 
+OpenMP
+------
+
+-   compiler-based approach to parallel programming (and some other things, too)
+-   can also be used to offload to accelerators/GPUs
+-   needs a single, shared memory node to operate: use MPI to distribute across nodes, OpenMP to parallelise inside a node
+-   cosmos has an unusual case of shared memory across nodes (properly called NUMA-nodes in this case), so both work
+-   OpenMP and NUMA issues
+-   OpenMP is shared memory model with implicit parallelism, so must be careful with what is shared and what is not
+    -   false sharing
+    -   data corruption can occur
+    -   correct which is correct on one thread can suddenly be incorrect with OpenMP parallelism
+    -   must use critical/atomic sections to guard shared written data
+        -   effectively non-parallel region in an otherwise parallelised chunk
+        -   example
+-   OpenMP can also deadlock
+-   we have course material, can even run a course if needed
+
 Think Distributed --- Parallel Taken to the Extreme
 ---------------------------------------------------
 
@@ -78,5 +96,18 @@ Ensure scalability first
 -   So, for now, we'll write distributed parallel code and worry about on-node and in-core performance later
 -   Fortunately, a good choice of scientific library will deal with most distributed computing issues
     -   On this course, we will use *PETSc* but there are others, like TODO!!!
+
+An aside: offload to an accelerator or GPU
+------------------------------------------
+
+-   Provides much higher performance/watt than normal CPU
+-   We use Xeon Phi in the examples; GPU is similar but slightly trickier
+-   Can be done explicitly, but almost never worth the effort: Intel's compiler has two ways to offload using compiler directives (pragmas) only, LEO and OpenMP.
+-   GPU very popular in e.g. machine learning and neural networks, so transferable skill
+
+### Example/Cookbook
+
+-   some basic example
+-   courses available
 
 Cookbook: TODO!!! example algorithms (though no code yet)

@@ -108,13 +108,21 @@ ksp = PETSc.KSP().create()
 
 ksp.setDM(dm)
 
-ksp.setType(PETSc.KSP().Type.PREONLY)
-ksp.getPC().setType(PETSc.PC().Type.LU)
-
 ksp.setComputeRHS(poisson_problem.rhs)
 ksp.setComputeOperators(poisson_problem.compute_operators)
 
 ksp.setFromOptions()
+
+if (comm.size <= 1):
+    if not(OptDB.hasName("ksp_type")):
+        ksp.setType(PETSc.KSP().Type.PREONLY)
+    if not(OptDB.hasName("pc_type")):
+        ksp.getPC().setType(PETSc.PC().Type.LU)
+else:
+    if not(OptDB.hasName("ksp_type")):
+        ksp.setType(PETSc.KSP().Type.GMRES)
+    if not(OptDB.hasName("pc_type")):
+        ksp.getPC().setType(PETSc.PC().Type.BJACOBI)
 
 field = dm.createGlobalVector()
 sol = field.duplicate()

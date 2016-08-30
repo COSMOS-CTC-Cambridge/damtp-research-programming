@@ -185,6 +185,7 @@ Some Hardware Considerations
         -   cache collision happens when CPU needs to cache \>2<sup>N</sup> addresses mapping to the same set
         -   cache collisions explain many unexpected performance decreases, especially when one has a an array with a dimension equal to some power of two
         -   typical value of N \< 10
+    -   striding and cache-line loads
     -   see [this](https://en.wikipedia.org/wiki/CPU_cache) for good read on caches
 -   other on-core issues that have to do with parallelism
     -   *false sharing* affects many unsuspecting OpenMP parallelisations
@@ -205,6 +206,7 @@ First Shot at Optimising the Laplacian
 
 -   Recall the triple for-loop in the Laplacian above? It was the hot spot.
 -   We'll forget about the other bits for now (we could not optimise the FFTs anyway)
+-   TODO!!! add a pre-example either with striding or wrong-order-loops (if they bad inpython, that is)
 
 ``` {.python}
   import numpy
@@ -340,6 +342,7 @@ C+Python = Cython: an optimised RHS
     -   this is more or less standard cython preamble
     -   notice also the type definitions in the function definition: **always** type **everything** in cython as if you do not, cython treats them as python objects with all the performance penalty that implies
 -   we'll also introduce the right datatypes: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian
+-   TODO <http://stackoverflow.com/questions/33193851/cython-prange-slower-for-4-threads-then-with-range>
 
 ``` {.python}
   %%bash
@@ -418,7 +421,7 @@ C+Python = Cython: an optimised RHS
 
 ``` {.python}
   %%bash
-  cat ../codes/python/cyLaplacian5.pyx
+  cat ../codes/python/cyLaplacian6.pyx
 ```
 
 ``` {.python}

@@ -6,11 +6,19 @@ Linear Solves
 
 ### Direct Solve
 
+-   Poisson equation \( \nabla^2 \phi(x,y) - g(x,y) = 0 \)
+-   Poisson equation \[ \nabla^2 \phi(x,y) - g(x,y) = 0 \]
 -   Poisson equation
 
-\( \nabla^2 \phi(x,y) - g(x,y) = 0 \)
+\[ \nabla^2 \phi(x,y) - g(x,y) = 0 \]
 
--   Direct Solce is (\(O((Nx*Ny)^2)\)) complexity, so be careful
+-   Poisson equation
+
+\begin{equation}
+\nabla^2 \phi(x,y) - g(x,y) = 0
+\end{equation}
+
+-   Direct Solce is\( O((Nx*Ny)^2) \) complexity, so be careful
 -   It also needs that amount of storage!
 -   Let's see what the code looks like.
 
@@ -162,13 +170,6 @@ Linear Solves
   ksp.setDM(dm)
 ```
 
--   the defaults are "GMRES" and "ILU", which combined gives an iterative method; we want a direct solve
-
-``` {.python}
-  ksp.setType(PETSc.KSP().Type.PREONLY)
-  ksp.getPC().setType(PETSc.PC().Type.LU)
-```
-
 -   then tell the solver how to generate the RHS and matrix
 
 ``` {.python}
@@ -180,6 +181,22 @@ Linear Solves
 
 ``` {.python}
   ksp.setFromOptions()
+```
+
+-   the defaults are "GMRES" and "ILU", which combined gives an iterative method; we want a direct solve
+    -   but `LU` is uniprocessor so multicore versions must be ran with something else
+
+``` {.python}
+  if (comm.size <= 1):
+      if not(OptDB.hasName("ksp_type")):
+          ksp.setType(PETSc.KSP().Type.PREONLY)
+      if not(OptDB.hasName("pc_type")):
+          ksp.getPC().setType(PETSc.PC().Type.LU)
+  else:
+      if not(OptDB.hasName("ksp_type")):
+          ksp.setType(PETSc.KSP().Type.GMRES)
+      if not(OptDB.hasName("pc_type")):
+          ksp.getPC().setType(PETSc.PC().Type.BJACOBI)
 ```
 
 -   Before we can solve the problem we need a workspace (`sol`) and an initial guess (`field`), which we just leave uninitialised now: for a KSP solver, that of course affects convergence speed but unlike Newton algorithms, it makes no difference otherwise: the inverse of the matrix is unique when it exists.
