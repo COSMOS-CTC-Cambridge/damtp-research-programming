@@ -48,7 +48,7 @@ ${SRCFILES} ${PNGFILES}: ${MDFILES}
 	ipython3 codes/python/exportcleanup.py -- $@
 
 %.pdf: %.org
-	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)' --eval '(sit-for 15)'
+	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)' --eval '(sit-for 25)'
 
 cleanSRC:
 	rm -f ${SRCFILES} ${MDFILES} ${PNGFILES}
