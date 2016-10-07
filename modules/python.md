@@ -647,14 +647,14 @@ instance
 a variable defined inside a class method and attached to the instance (like the `self.flies` below)
 
 ``` {.python}
-  class animalia:
+  class animalia(object):
       '''animalia has two class attributes: level and heterotroph; they can be accessed by "self.level" and
          "self.heterotroph" inside the class and by "instancevariablename.level" and
          "instancevariablename.heterotroph" just like instance variables.
       '''
       level = "kingdom"
       heterotroph = True
-  class plantae:
+  class plantae(object):
       level = "kingdom"
       autotroph = True
   class chordata(animalia):
