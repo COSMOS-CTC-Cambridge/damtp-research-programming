@@ -7,9 +7,11 @@ DELETEFILESONRELEASE = $(filter-out Makefile,$(wildcard *))
 
 BRANCH=$(shell git symbolic-ref -q --short HEAD)
 
-.PHONY: all release checkbranch changebranch processfiles
+.PHONY: all checkbranch changebranch export processfiles release 
 
 all: release
+
+export: ${MDFILES}
 
 release: | checkbranch changebranch processfiles
 	rm -fr ${ORGFILES}
@@ -44,7 +46,7 @@ ${SRCFILES} ${PNGFILES}: ${MDFILES}
 	# the next line will do the trick but with the annoying side-effect that one has to load the whole emacs startup thingy
 	# TODO!!! FIXME: the (sit-for 5) waits for 5 units of time because we have no way of waiting for pandoc to finish before exiting emacs!
 	# TODO!!! FIXME: this only works wuth --user juhaj and SOME magic SOMEWHERE in ~juhaj...
-	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-markdown_github)' --eval '(sit-for 5)'
+	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(setq org-confirm-babel-evaluate nil)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-markdown_github)' --eval '(sit-for 5)'
 	ipython3 codes/python/exportcleanup.py -- $@
 
 %.pdf: %.org

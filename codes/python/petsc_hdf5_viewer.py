@@ -28,4 +28,4 @@ vwr.destroy()
 vwr=PETSc.Viewer().createHDF5(fn.name, mode=PETSc.Viewer.Mode.READ)
 vec2.load(vwr)
 
-print("Are they equal? " + str(bool(vec1.equal(vec2))))
+print("Are they equal? " + ["No!", "Yes!"][vec1.equal(vec2)])

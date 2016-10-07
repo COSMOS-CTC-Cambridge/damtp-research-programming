@@ -92,8 +92,7 @@ Canonical example: MPI Hello World
 ### In non-interative python
 
 ``` {.python}
-  %%bash
-  mpirun -np 23 python -c "$(echo 'import mpi4py
+  import mpi4py
   from mpi4py import MPI
   size=MPI.COMM_WORLD.Get_size()
   print("Hello, World. I am rank "+
@@ -101,10 +100,21 @@ Canonical example: MPI Hello World
         rank=MPI.COMM_WORLD.Get_rank(),
         len=len(str(size)),
         size=size))
-  ')"
 ```
 
-There is no easy way to run interactive MPI jobs with python except with a module called `ipyparallel` which we will look at soon.
+``` {.python}
+  %%bash
+  mpirun -np 23 python -c ../codes/python/mpi_hello_world.py
+```
+
+There is no easy way to run interactive MPI jobs with python except with a module called `ipyparallel` which we will look at soon. If you do not believe me, this is how to do it:
+
+``` {.bash}
+  %%bash
+  mpirun -np 8 xterm -e python
+```
+
+and you end up with 8 separate terminal windows and every single python command must be typed in ALL of them. There are terminal multiplexers which can take one input and replicate it to N terminals, but you still end up with N+1 terminal windows.
 
 ### In C++
 
@@ -185,90 +195,90 @@ We will soon learn that there are other ways to do this, too; most importantly, 
   for output in res1.result: print(output)
 ```
 
-Basic messaging calls (see individual man pages for descriptions)
------------------------------------------------------------------
+Basic messaging calls in C
+--------------------------
 
-TODO!!! Add mpi4py equivalents!
+The python calls are all called as methods of the relevant communicator instance, e.g. `mpi4py.MPI.COMM_WORLD.Bcast`. The python method names are in parentheses. Please see individual man pages for descriptions.
 
 `MPI_Allgather`  
-concatenate same amount of data from all ranks and send result to all ranks
+(Allgather) concatenate same amount of data from all ranks and send result to all ranks
 
 `MPI_Allgatherv`  
-concatenate some amount of data from all ranks and send result to all ranks
+(Allgatherv) concatenate some amount of data from all ranks and send result to all ranks
 
 `MPI_Allreduce`  
-reduction operation with results sent to all ranks
+(Allreduce) reduction operation with results sent to all ranks
 
 `MPI_Alltoall`  
-every rank send data to every rank (think of matrix transpose!)
+(Alltoall) every rank send data to every rank (think of matrix transpose!)
 
 `MPI_Barrier`  
-everyone waits until everyone's here --- should never be needed
+(Barrier) everyone waits until everyone's here --- should never be needed
 
 `MPI_Bcast`  
-one-to-all
+(Bcast) one-to-all
 
 `MPI_Comm_rank`  
-what's my rank
+(rank or Get<sub>rank</sub>()) what's my rank
 
 `MPI_Comm_size`  
-how many ranks are there
+(size or Get<sub>size</sub>()) how many ranks are there
 
 `MPI_Finalize`  
-we are done
+(mpi4py.MPI.Finalize()) we are done
 
 `MPI_Gather`  
-get same amount of data from every rank to a single one
+(Gather) get same amount of data from every rank to a single one
 
 `MPI_Gatherv`  
-get some amount of data from every rank to a single one
+(Gatherv) get some amount of data from every rank to a single one
 
 `MPI_Init`  
-let's start
+(mpi4py.MPI.Init()) let's start
 
 `MPI_Irecv`  
-basic non-blocking message receiving routine
+(Irecv) basic non-blocking message receiving routine
 
 `MPI_Isend`  
-basic non-blocking message sending routine
+(Isend) basic non-blocking message sending routine
 
 `MPI_Reduce`  
-reduction operation with results sent to a single rank
+(Reduce) reduction operation with results sent to a single rank
 
 `MPI_Scatter`  
-inverse of `MPI_Gather`
+(Scatter) inverse of `MPI_Gather`
 
 `MPI_Scatterv`  
-inverse of `MPI_Gatherv`
+(Scatterv) inverse of `MPI_Gatherv`
 
 `MPI_Type_create_struct`  
-define a datatype which looks like a struct
+(mpi4py.MPI.\<datatype\>.Create<sub>struct</sub>) define a datatype which looks like a struct
 
 `MPI_Type_create_subarray`  
-define a datatype which looks like a subarray (can also be implemented with `MPI_Type_create_struct` but this is easier)
+(mpi4py.MPI.\<datatype\>.Create<sub>subarray</sub>) define a datatype which looks like a subarray (can also be implemented with `MPI_Type_create_struct` but this is easier)
 
 `MPI_Wait`  
-wait for non-blocking messaging operations to finish
+(MPI.Request.Wait) wait for non-blocking messaging operations to finish
 
 For simple Cartesian data distribution MPI has good support routines
 
 `MPI_Dims_create`  
-companion to `MPI_Cart_create`: determines optimal rank to Cartesian lattice layout
+(mpi4py.MPI.Compute<sub>dims</sub>) companion to `MPI_Cart_create`: determines optimal rank to Cartesian lattice layout
 
 `MPI_Cart_coords`  
-rank -\> (i,j,k)
+(Get<sub>coords</sub>) rank -\> (i,j,k)
 
 `MPI_Cart_create`  
-create a Cartesian MPI topology: the library knows which rank is "next to" which rank
+(Create<sub>cart</sub>) create a Cartesian MPI topology: the library knows which rank is "next to" which rank
 
 `MPI_Cart_get`  
-retrieve information about the topology
+(Get<sub>info</sub>) retrieve information about the topology
 
 `MPI_Cart_rank`  
-(i,j,k) -\> rank
+(Get<sub>cartrank</sub>) (i,j,k) -\> rank
 
 `MPI_Cart_shift`  
-who's rank's neighbour in given Cartesian direction
+(Shift) who's rank's neighbour in given Cartesian direction
 
 Map/Reduce with and without MPI
 -------------------------------
@@ -382,42 +392,61 @@ Distributed Computing
 
 -   build this piecemeal, but first, we initialise the parallel environment
 
-``` {.python}
-  import ipyparallel
-  c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
-  directview=c[:]
-  directview.block=True
-  with directview.sync_imports():
-      import numpy
-      import mpi4py
-      from mpi4py import MPI
+``` {#DCI_preamble .python}
+  try:
+      if (directview):
+          pass
+  except:
+      import ipyparallel
+      c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
+      directview=c[:]
+      directview.block=True
+      with directview.sync_imports():
+          import numpy
+          import mpi4py
+          from mpi4py import MPI
 ```
 
 ### define a couple of book-keeping classes
 
-TODO!!! Would it be better to use docstrings?
-
--   `rankinfo` just holds a few "global" values of our problem, like stencil width and problem size
--   `Get_rank` and `Get_size` find out this rank's id and total number of ranks, respectively
--   `localsizes` has 2 extra points in each dimension: these will hold the ghost points
--   `serialised_print` will print out its arguments one rank at a time to avoid mess like above
+-   as they are just book-keeping the documentation is in their docstrings
+-   feel free to reuse them as you see fit (but no plagiarism, please)
+-   I ran out of time preparing these so some refactoring was left half-done TODO!!!
 -   in general, you do not want every rank to print: it will kill performance
     -   rather gather all messages to a few ranks (or just one) and print from there if every rank's output is needed
 
-``` {.python}
+``` {#DCI_rankinfo .python}
   class rankinfo(object):
-      ndim=3
-      periods=[False, True, True]
-      stencil_width = 1
+      '''This holds a few "global" values of our problem, like stencil width and problem size.
+
+      Parameters
+      ----------
+
+      sizes : tuple of numbers of lattice points without ghost points along the coordinate axes (in x,y,z order)
+
+      Attributes
+      ----------
+
+      rank : the rank of this class in MPI.COMM_WORLD
+      size : the number of ranks in  MPI.COMM_WORLD
+      ndim : how many physical dimensions does our lattice have
+      periods : periodicity of the lattice
+      stencil_width : the number of ghost points needed from outside of the lattice on each side
+      localsizes : the number of lattice points along the coordinate axes including the ghost points
+      '''
       def __init__(self, sizes):
+          '''See above for details of initialisation.'''
+          self.ndim=3
+          self.periods=[False, True, True]
+          self.stencil_width = 1
           self.rank=MPI.COMM_WORLD.Get_rank()
           self.size=MPI.COMM_WORLD.Get_size()
-          self.localsizes=[x+rankinfo.stencil_width*2 for x in sizes]
+          self.localsizes=[x+self.stencil_width*2 for x in sizes]
   directview["rankinfo"]=rankinfo
 
   def serialised_print(msg, topo):
-      # serialised printing: be VERY careful with structures like this lest you get a deadlock:
-      # every rank MUST eventually call the Barrier!
+      '''Print out a message from every rank syncronously in rank-order. Recall Barrier() is global, so every
+      rank must call it or we deadlock.'''
       myrank = topo.Get_rank()
       for rankid in range(0,topo.Get_size()):
           if (myrank == rankid):
@@ -427,20 +456,39 @@ TODO!!! Would it be better to use docstrings?
   directview["serialised_print"]=serialised_print
 ```
 
-### set up the lattice
+### set up the Cartesian topology for our lattice
 
--   `topology` holds our (Cartesian) grid related information
-    -   the preceding call `Compute_dims` just finds `self.me.ndim` factors of `self.me.size`: that will become rank layout in the Cartesian grid;
-        -   the algorithm is implementation specific, but usually tries to find factors close to each other in size
-        -   N.B. apart from a few exceptions, the MPI standard specifies an **interface**, not **implementations** so **never** depend on what a particular implementation does behind the scenes: that may change ay any time
-    -   the important function here is `MPI.COMM_WORLD.Create_cart`, which actually creates the topology
-    -   `reorder=True` means rank numbers in the new communicator may be different than in the old one
-    -   the `Shift()` calls tell us who on our left, right, ahead, behind, below, above --- we need those later so we save them to a dict of dicts
-    -   we also define an informative `print_info` function, it has no functional role
+-   the `Compute_dims` algorithm is implementation specific, but usually tries to find factors close to each other in size
+-   N.B. apart from a few exceptions, the MPI standard specifies an **interface**, not **implementations** so **never** depend on what a particular implementation does behind the scenes: that may change ay any time
+-   the important function here is `MPI.COMM_WORLD.Create_cart`, which actually creates the topology
 
-``` {.python}
+``` {#DCI_topology .python}
   class topology(object):
+      '''This class holds information related to the topology of the MPI Cartesian Topology
+
+      Compute_dims() is used to find the most similar siez factors of "self.me.size" to distribute the data and
+      subsequently Create_cart() actually creates the cartesian topology communicator. This is one of the most
+      useful and important MPI calls. The parameter reorder=True means the MPI libarary is allowed to give the
+      ranks in the new communicator different numbers than in the old one. This allows the library to optimise
+      communications between ranks, assuming most communication is nearest-neighbour (and if it is not, using
+      a Cartesian topology is probably pointless). Finally, Shift() calls are used to find who those neighbours 
+      are.
+      '''
       def __init__(self, rankinfo):
+          '''Find out the best distribution of the lattice amonst the ranks of the communicator passed inside
+          "rankinfo", create the topology, and save information about the neighbours of present rank.
+
+          Parameters
+          ----------
+          rankinfo : a rankinfo instance describing current communicator
+
+          Attributes
+          ----------
+          dims : dimensions of the cartesian MPI rank grid (not lattice!)
+          topology : the new cartesian topology communicator
+          shifts : a dict of dicts of which rank to talk to when going along "X", "Y", or "Z" direcion in "up"
+                   or "down" direction
+          '''
           self.me=rankinfo
           self.dims=MPI.Compute_dims(self.me.size, self.me.ndim)
           self.topology=MPI.COMM_WORLD.Create_cart(self.dims, periods=self.me.periods, reorder=True)
@@ -451,6 +499,7 @@ TODO!!! Would it be better to use docstrings?
                        "Y": {"up": back, "down": front},
                        "Z": {"up": right, "down": left}}
       def print_info(self):
+          '''Print out textual information of the cartesian topology'''
           coords = self.topology.Get_coords(self.me.rank)
           msg="I am rank {rank} and I live at {coords}.".format(
               rank=self.me.rank, coords=coords)
@@ -473,10 +522,6 @@ TODO!!! Would it be better to use docstrings?
     -   MPI can sometimes also buffer things internally, causing two copies of data to be used
     -   downside of our approach is **the send buffer must not be altered** before the transfer is complete
 -   we need a total of 12 datatypes: one per direction per axis
--   `MPI.DOUBLE.Create_subarray` creates the datatype using `MPI.DOUBLE` as the underlying unit datatype element
-    -   `sizes` is the (local) size of the full 3D array of elements of type `MPI.DOUBLE`
-    -   the second argument is the size and shape of the subarray: this needs to be of the same dimension as the full array, but one dimension can be just 1 grid point deep as we do here, effectively making it one dimension lower
-    -   the third argument specifies the grid point where the subarray starts, in coordinates of the full local array
 -   an example 2D subarray of a 2D array
     -   this would be created using `MPI.INT.Create_subarray([5,5], [2,3], [1,2])`
     -   shaded area is the subarray
@@ -484,9 +529,42 @@ TODO!!! Would it be better to use docstrings?
 
 ![](images/MPI_subarray.png)
 
-``` {.python}
+``` {#DCI_ghost_data .python}
   class ghost_data(object):
+      '''Ghost communication manager object.
+
+      Basically consists of 12 MPI datatype instances describing the ghost send/recv (2) communications in
+      up/down (*2) the three (*3=12) dimensions.
+
+      Parameters
+      ----------
+      topology : a topology instance containing the desired cartesian communicator
+      sizes : the size of the lattice on this rank (including ghost cells)
+
+      Attributes
+      ----------
+      types : a dict of dicts of dicts containing instances of the 12 datatypes; outermost dict keys are axis
+              names, next level keys are "send" or "recv" and last level is direction "up" or "down"
+      axes : dict of dicts containing the neighbours along the axes; outer dict is keyed with axis names, inner
+             dict is keyed with direction "up" or "down"
+      mx, my, mz : numbers of lattice points along the axes, including ghost points
+
+      Methods
+      -------
+      None supposed to be called from outside the class.
+      '''
       def __init__(self, topology, sizes):
+          '''Use MPI.DOUBLE.Create_subarray to create the datatypes required for ghost communications. We use
+          MPI.DOUBLE as the underlying unit datatype element as our data is of that type.
+
+          The call to Create_subarray() has three arguments
+              - the first, sizes, is the (local) size of the full 3D array of elements of the basal type
+              - the second argument is the size and shape of the subarray: this needs to be of the same dimension as the
+                full array, but one dimension can be just 1 grid point deep as we do here, effectively making it
+                one dimension lower
+              - the third argument specifies the grid point where the subarray starts, in coordinates of the full local
+                array
+          '''
           self.mx,self.my,self.mz = sizes
           self.types = {}
           self.axes = {}
@@ -519,7 +597,7 @@ TODO!!! Would it be better to use docstrings?
   directview["ghost_data"]=ghost_data
 ```
 
-You can use `MPI_Type_create_darray()` to create a "distributed array" suitable for e.g. reading to/writing from a binary file in parallel. It will not have ghosts, though, which is what we want here.
+-   You can use `MPI_Type_create_darray()` to create a "distributed array" suitable for e.g. reading to/writing from a binary file in parallel. It will not have ghosts, though, which is what we want here.
 
 ### set up routines for exchanging the ghost data
 
@@ -531,8 +609,20 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 -   **always** post the `Recv` before the `Send` lest deadlocks occur
 -   there is also a (blocking!) `Sendrecv` call which is guaranteed never to deadlock
 
-``` {.python}
+``` {#DCI_ghost_exchange .python}
   def ghost_exchange_start(topo, localarray, ghostdefs):
+      '''Start sending and receiving the ghost data.
+
+      Parameters
+      ----------
+      topo : the communicator to use
+      localarray : the numpy array to read/write
+      ghostdefs : an instance of ghost_data of this particular lattice and topology
+
+      Returns
+      -------
+      commslist : a list of the MPI communication objects that control the transfers we started
+      '''    
       commslist=[]
       for axis in ["X", "Y", "Z"]:
           for direction in ["up", "down"]:
@@ -550,6 +640,12 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
   directview["ghost_exchange_start"]=ghost_exchange_start
 
   def ghost_exchange_finish(commslist):
+      '''Wait until all the MPI transfers in "commslist" have finished.
+
+      Parameters
+      ----------
+      commslist : list of transfers to wait for
+      '''
       MPI.Request.Waitall(commslist)
       return
   directview["ghost_exchange_finish"]=ghost_exchange_finish
@@ -558,12 +654,23 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 ### initialise the lattice
 
 -   we have not yet looked at I/O so set up initial data to be just squares of consecutive integers starting from our MPI rank number squared
-    -   TODO!!! description is wrong
-    -   This should actually be samples of a differentiable function, but finding the global coordinates is a bit tricky (need to call to `Get_rank` and `Cart_coords` plus arithmetic) so we want to keep it simple here
--   a small complication comes from the fact that we only want to initialise the non-ghosted regions
+    -   TODO!!! Change to e.g. a \( (x-xmin)(x-xmax)(y-ymin)(y-ymax) \)
+-   Notice how it is somewhat complicated to find the global coordinates, but libraries like `PETSc` provide easy ways for this
+-   an additional complication comes from the fact that we only want to initialise the non-ghosted regions
 
-``` {.python}
+``` {#DCI_initialise .python}
   def initialise_values(me, topo):
+      '''Set up the initial values in the lattice; never mind the details, they are "problem" dependent anyway.
+
+      Parameters
+      ----------
+      me : an instance of rankinfo
+      topo : an instance of topology; should be the same Cartesian topology we create earlier using "me"
+
+      Return
+      ------
+      local_array : the local portion of the global data as initialised (with ghost points, but ghosts are uninitialised)
+      '''
       size = topo.topology.Get_size()
       local_array = numpy.zeros(me.localsizes)
       procsalong, periods, mycoord = topo.topology.Get_topo()
@@ -585,8 +692,21 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
     -   the initial values act as the boundary conditions
 -   `numpy.gradient` computes 2nd order finite difference derivatives in all directions, i.e. the gradient
 
-``` {.python}
+``` {#DCI_gradient .python}
   def compute_grad(topology, local_array, ghostdefs):
+      '''Compute the 2nd order central finite difference gradient of the data.
+
+      Parameters
+      ----------
+      topology : an instance of the relevan Cartesian topology
+      local_array : the local portion of the global lattice, including ghost points
+      ghostdefs : the ghost data communication objects
+
+      Return
+      ------
+      gradients : the gradient of the interior points of "local_array"; note that numpy.gradient will compute
+                  values at the ghost points, too, but those are not included in "gradients" (note the slice)
+      '''
       commslist=ghost_exchange_start(topology, local_array, ghostdefs)
       # could do work here but NOT use ghost points!
       ghost_exchange_finish(commslist)
@@ -598,16 +718,28 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 ### find maximum value in a global array
 
 -   we find the local maximum
--   reserve space for the global answer and
--   use `Allreduce` to
+-   reserve space for the global answer and use `Allreduce` to get the answer
+-   and finally return both local and global answers
 
-    1.  apply `MPI.MAX` operation (`find greatest) to all local values
-         - there are other operations, too, like =MPI.SUM` etc
-    2.  send the result to all ranks
--   we finally return both local and global answers
-
-``` {.python}
+``` {#DCI_find_max .python}
   def find_global_max(topology, local_array, ghostdefs):
+      '''Find the global maximum value on the lattice.
+      We first use the .max() method to find the local maximum
+      Then use Allreduce to apply MPI.MAX operation (=find greatest) to all local values in one go inside MPI
+      library.
+      Finally Allreduce sends the result to all ranks: Reduce would give the result to one rank only.
+      N.B. There would be other operations we can do, too, like MPI.SUM.
+
+      Parameters
+      ----------
+      topology : an instance of the relevant Cartesian topology
+      local_array : the local portion of the global lattice data
+      ghostdefs : the ghost transfer objects
+
+      Returns
+      -------
+      maxgrad_local,maxgrad_global : local and global maximum on the lattice
+      '''
       maxgrad_local = numpy.array(local_array).max()
       maxgrad_global = numpy.zeros_like(maxgrad_local)
       topology.topology.Allreduce([maxgrad_local, MPI.DOUBLE],
@@ -619,10 +751,21 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 
 ### the main code
 
--   before main code, we define a rudimentary correctness testing routine: it knows the expected correct answers up to 8 ranks and could easily be expanded to calculate the expected result from an analytic expression
+-   before main code, we define a rudimentary correctness testing routine: it knows the expected correct answers up to 4 ranks and could easily be expanded to calculate the expected result from an analytic expression
 
-``` {.python}
+``` {#DCI_testme .python}
   def testme(maxgrad, topology):
+      '''Test if we get the correct result.
+
+      Parameters
+      ----------
+      maxgrad : the computed result
+      topology : an instance of the relevant Cartesian comunicator
+
+      Return
+      ------
+      maxgrad == expected[size-1] : True if the computed "maxgrad" was correct, False if not
+      '''
       size=topology.topology.Get_size()
       rank=topology.topology.Get_rank()
       expected=[1650.0,7632.0,13032.0,32119.5]
@@ -632,9 +775,17 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 
 -   the main routine, it just calls what we defined above
 
-``` {.python}
+``` {#DCI_main .python}
   @directview.remote(block=False)
   def main():
+      '''Main code: run the bits and pieces defined above with the relevant arguments for the demonstration
+      3x4x5 lattice. This is execured on the remote workers due to the decorator, so return values stay at the
+      workers.
+
+      Return
+      ------
+      result_g, local_array : the global maximum of the data, the local portion of the array
+      '''
       me=rankinfo(sizes=[3,4,5])
       cartesian_topology=topology(me)
       ghosts = ghost_data(cartesian_topology, me.localsizes)
@@ -658,7 +809,7 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 
 -   now everything is defined and we can run the code
 
-``` {.python}
+``` {#DCI_runit .python}
   results=main()
   results.wait()
   results.display_outputs()
@@ -668,14 +819,12 @@ You can use `MPI_Type_create_darray()` to create a "distributed array" suitable 
 -   another version is available in `codes/python/distributed_computing_universal.py`
     -   it runs in a notebook, from the command line with ipyparallel installed and with pure MPI
     -   includes some extra wrapper functions to make that possible
--   a modularised, better compartmentalised, non-interactive version is available at `codes/python/distributed_computing.py`
+-   a modularised, better compartmentalised, non-interactive version (which is probably out of sync with the others as it is not automatically updated like the others) is available at `codes/python/distributed_computing.py`
 -   notice that these codes have no differences in the classes or functions themselves
     -   only differences are some wrappers and extra decorators
     -   **allows development of real parallel batch codes in ipyparallel/ipython/notebook environment**
     -   if there is any concern of the effect of the wrappers on performance, one can just remove the compatibility layer
     -   this version is available at `codes/python/distributed_computing_batch.py`
-
-TODO!!! No, it is not, it is an old version now!
 
 [1] \*By default ipcluster will try to use all resources on all the machines it connects to!\* The `-n 2` specifies we want 2 parallel workers. You can use any positive integer (although 1 would not give you any parallelism), but please consider that other people may be using the machine as well, so unless you do this on your personal desk- or laptop, please do not use all the resources.
 

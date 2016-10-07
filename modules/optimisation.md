@@ -12,7 +12,7 @@ Profiling Your Code
 -   Always find your "hot spots" before starting to optimise
     -   The hot spot is often not where you think it is
 -   In Python, there is a built-in tool `cProfile` we can use
-    -   For C/Fortran you can use TODO!!! URLS!!! HPCToolkit, TAU, or if you have Intel compatible hardware, Intel VTune
+    -   For C/Fortran you can use [HPCToolkit](http://hpctoolkit.org/), [TAU](http://www.cs.uoregon.edu/research/tau/home.php), or if you have Intel compatible hardware, [Intel VTune](https://software.intel.com/en-us/intel-vtune-amplifier-xe)
 -   Example code initialises the data, computes the Laplacian, takes a Fourier Transform, adds a little to each variable, transforms back, and writes to disc
 
 ``` {.python}
@@ -82,7 +82,6 @@ Profiling Your Code
     -   note how the `cumtime` and `tottime` work: the `cumtime` of a function equals its `tottime` plus the `cumtime` of any of its callees
     -   that code is intentionally *BAD*
     -   unfortunately we need it to be bad to see effects of our optimisation later on!
--   TODO!!! Laplacian, but err... compute intensify it?
 
 ### Second Look: Line Level Profile
 
@@ -90,12 +89,15 @@ Profiling Your Code
     -   the first step in this case will be easy but it will get harder as we proceed and
 -   for larger routines you would like to have a line-by-line profile
     -   this is easy to do with C, C++ and Fortran: all the tools mentioned above can give a line-by-line profile
-    -   not so for python: there is [line<sub>profiler</sub>](https://github.com/rkern/line_profiler) or [pprofile](https://github.com/vpelletier/pprofile) and a slightly different approach: [pyvmmonitor](http://www.pyvmmonitor.com/)
+    -   for python there is [line<sub>profiler</sub>](https://github.com/rkern/line_profiler) or [pprofile](https://github.com/vpelletier/pprofile) and a slightly different approach: [pyvmmonitor](http://www.pyvmmonitor.com/)
     -   some large routines can and perhaps should be split into smaller ones, thus removing the need to profile line-by-line
 
 ### Third Look: Hardware Utilisation
 
 -   Digging even deeper, one may want to know why a particular code provides so few operations / second compared to what google says the CPU can do
+-   modern server CPU has *performance counters* which can be queried for this purpose
+    -   this is typically done by *instrumenting* your code (TAU will do that automatically for you) or
+    -   periodic sampling of the CPU hardware provides *statistical profiling* which is often just as good and easier to do
 -   Let's look what kind of performance our `Laplacian` achieves
 
 ``` {.python}
@@ -134,19 +136,21 @@ Language Differences
 
 -   one often hears arguments about language A being faster than language B
     -   rubbish
-    -   language A may be better suited than others for achieving good in problem X but there's no overall winner
+    -   language A may be better suited than others for achieving good performance in problem X but there's no overall winner
 -   another often repeated claim is interpreted languages are slow
     -   rubbish again
-    -   well written python is actually quite optimal and not to be shied away from!
-    -   python WILL CACHE intermediate results
+    -   well written python is actually quite good and not to be shied away from!
+    -   profiling pifalls
         -   performance can fluctuate wildly if doing repetitive tasks, like gathering performance statistics
-        -   performance analysis is hard as repeating the same computation will use the cache and doing just one iteration has natural variation and overheads
-        -   can be alleviated by using relatively big problems
-        -   can eat more memory than you think (but won't run out)
+        -   repeating the same computation may use the cache and doing just one iteration has natural variation and overheads
+        -   use relatively big problems to avoid focusing on constant-cost overheads which may be negligible in practical size calculations
+        -   drilling down to very small functions will eventually start profiling the profiler
+            -   when optimising, periodically compare the performance with and withouy profiling
     -   main issue with python is *it cannot do OpenMP*
-        -   but it has its own tools: *multiprocessing* and *handythread*, which works almost as
-        -   python combined with *cython* can automatically generate (hopefully) fast C/C++ extensions which can then use OpenMP
+        -   but it has its own tools: *multiprocessing* and *dask*, who work almost as
+        -   python combined with *cython* can automatically generate (hopefully) fast C/C++ extensions which can use OpenMP
         -   we'll have a look at cython later
+        -   Threading Building Blocks now have python bindings: a very flexible task-based parallel framework
     -   other solutions for python include
         -   `scipy.weave` which is a JIT solution and no (easy) way to pre-compile and save the module, but generates very fast code
         -   `pypy` is another JIT solution which is very actively maintained
@@ -169,7 +173,7 @@ Some Hardware Considerations
     -   affects a NUMA machine like COSMOS as well as distributed memory machines (clusters)
 -   Interconnect Bandwidth
     -   easier to measure, and deal with than latency
-    -   at least an order of magnitude slower than memory, so avoid
+    -   at least an order of magnitude slower than memory, so avoid, avoid on COSMOS, too
 -   Memory subsystem performance
     -   NUMA causes issues even on single socket these days
     -   CPU's memory controller always operates on a *page* of memory
@@ -180,19 +184,76 @@ Some Hardware Considerations
         -   but introduce a degree of unpredictability
     -   cache is multi-level, only last level can keep up with core; prefetching
     -   set-associative
-        -   M addresses map to the same set
-        -   2<sup>N</sup> -way set associative cache N of M (\>\>2<sup>N</sup>) addresses in cache
+        -   M addresses map to the same set of cache lines
+        -   2<sup>N</sup> -way set associative cache: N of M (\>\>2<sup>N</sup>) addresses in cache
         -   cache collision happens when CPU needs to cache \>2<sup>N</sup> addresses mapping to the same set
         -   cache collisions explain many unexpected performance decreases, especially when one has a an array with a dimension equal to some power of two
         -   typical value of N \< 10
     -   striding and cache-line loads
+        -   CPU always fetches a cache-line's worth of consequtive addresses from memory, so avoid striding over values fetched
+        -   newest Intel CPUs can do "gather" loads and "scatter" stores: won't help bandwidth (memory controller still reads a cache line) can avoid wasting cache for something that's going to be strided over
     -   see [this](https://en.wikipedia.org/wiki/CPU_cache) for good read on caches
 -   other on-core issues that have to do with parallelism
     -   *false sharing* affects many unsuspecting OpenMP parallelisations
-        -   TODO!!! Try to demonstrate with a small code
-    -   page ownership can also surprise in a NUMA machine if owner is not where expected
-        -   very hard to control and hardware dependent, but usually **last writer** to a page owns it
-        -   but determining what belongs to which page is difficult (except for big malloc()ed arrays)
+        -   two versions of what looks like the same reduction code
+        -   forget about the first cell, we'll explain that and the other bits later
+
+``` {.python}
+  %load_ext Cython
+```
+
+``` {.python}
+  %%cython --compile-args=-Ofast --compile-args=-fopenmp --link-args=-fopenmp --link-args=-lgomp
+  import cython,numpy,os
+  from cython.parallel import prange, parallel, threadid
+  cimport numpy
+  DTYPE=numpy.float64
+  ctypedef numpy.float64_t DTYPE_t
+  @cython.boundscheck(False)
+  @cython.cdivision(True)
+  @cython.wraparound(False)
+  def test2(double [::1] test):
+      cdef int xmax = test.shape[0], ii, mytid
+      cdef double blergh
+      with nogil, parallel(num_threads=2):
+          mytid = threadid()
+          for ii in prange(0,xmax,schedule="static"):
+              blergh += + test[ii]
+      return blergh
+```
+
+``` {.python}
+  %%cython --compile-args=-Ofast --compile-args=-fopenmp --link-args=-fopenmp --link-args=-lgomp
+  import cython,numpy,os
+  from cython.parallel cimport prange, parallel, threadid
+  cimport numpy
+  DTYPE=numpy.float64
+  ctypedef numpy.float64_t DTYPE_t
+  @cython.boundscheck(False)
+  @cython.cdivision(True)
+  @cython.wraparound(False)
+  def test(double [::1] test):
+      cdef int xmax = test.shape[0], ii, mytid, num_threads=2
+      cdef double blergh[2], blerghsum=0
+      with nogil, parallel(num_threads=num_threads):
+          mytid = threadid()
+          for ii in prange(0,xmax,schedule="static"):
+              blergh[mytid] += test[ii]
+      for ii in xrange(num_threads):
+          blerghsum += blergh[ii]
+      return blergh
+```
+
+``` {.python}
+  data = numpy.random.random(10000000)
+  %timeit test(data)
+  %timeit test2(data)
+```
+
+-   but 10x performance difference due to false sharing
+-   page ownership can also surprise in a NUMA machine if owner is not where expected
+    -   very hard to control and hardware dependent, but usually **last writer** to a page owns it
+    -   but determining what belongs to which page is difficult (except for big malloc()ed arrays)
 -   in-core
     -   how to load a cache line
     -   branch misprediction
@@ -206,7 +267,6 @@ First Shot at Optimising the Laplacian
 
 -   Recall the triple for-loop in the Laplacian above? It was the hot spot.
 -   We'll forget about the other bits for now (we could not optimise the FFTs anyway)
--   TODO!!! add a pre-example either with striding or wrong-order-loops (if they bad inpython, that is)
 
 ``` {.python}
   import numpy
@@ -216,6 +276,16 @@ First Shot at Optimising the Laplacian
   import time as timemod
   import pstats
   import os
+
+  def Laplacian0(data, lapl, d, N):
+      for kk in range(1,data.shape[2]-1):
+          for jj in range(1,data.shape[1]-1):
+              for ii in range(1,data.shape[0]-1):
+                  lapl[ii,jj,kk] = (
+                      (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])/(d[0]*d[0]) +
+                      (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])/(d[1]*d[1]) +
+                      (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])/(d[2]*d[2]))
+      return
 
   def Laplacian1(data, lapl, d, N):
       for ii in range(1,data.shape[0]-1):
@@ -279,7 +349,9 @@ First Shot at Optimising the Laplacian
 
   SIZE=100
   RunList=[{"func":"Laplacian2", "flop":(SIZE-2)**3*17}]
-  results = RunSome([{"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
+  results = RunSome([
+      {"func":"Laplacian0", "flop":(SIZE-2)**3*17},
+      {"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
 ```
 
 -   **Rule \#1**: never use a `for` loop to operate on a numpy array
@@ -332,17 +404,19 @@ C+Python = Cython: an optimised RHS
     -   the code as it stands also happens to be bound by the speed of the MEMORY, not the CPU
     -   we have no idea how well the caches are used (would need to profile using more sophisticated tools)
 -   next, we'll write an improved version using *cython*
-    -   N.B. only ipython and jupyter can run this: normal python cannot
-    -   we will deal with plain python later
 -   a look at the code
-    -   everything from `%%cython` to the next empty line will be saved to a temporary file, turned into a C code using cython and then compiled into a python module which is then imported
+    -   the first bit of code will be processed by python when it is imported (by `pyxipmort`)
     -   when cython runs, it does not see our current namespace (it is a separate process), so we need to import whatever we use
     -   there is also a special `cimport` command, which imports "into C code"
     -   the `@cython` lines are decorators defined in cython which affect how cython treats the following function: we want no bounds checking on our arrays and we want \(1/0\) to produce \(\infty\) instead of python's `ZeroDivisionError`
     -   this is more or less standard cython preamble
     -   notice also the type definitions in the function definition: **always** type **everything** in cython as if you do not, cython treats them as python objects with all the performance penalty that implies
 -   we'll also introduce the right datatypes: the `double` we used above just happens to be the same as an element of the `numpy.ndarray` we passed Laplacian
--   TODO <http://stackoverflow.com/questions/33193851/cython-prange-slower-for-4-threads-then-with-range>
+
+``` {.example}
+- TODO http://stackoverflow.com/questions/33193851/cython-prange-slower-for-4-threads-then-with-range
+- look at if double [::1] helps and/or can work with the DTYPE stuff we have
+```
 
 ``` {.python}
   %%bash
@@ -451,7 +525,7 @@ C+Python = Cython: an optimised RHS
     -   you will see different behaviour on cosmos or any other proper HPC hardware
 -   try changing the `num_threads` argument and see how this scales (you have 12 cores)
 
-### Unintended side-effect
+### Unintended positive side-effect
 
 -   Memory consumption drops by 50% between `cyLaplacian2` and `cyLaplacian3`
 
@@ -464,9 +538,11 @@ C+Python = Cython: an optimised RHS
 ```
 
 -   the above needs to be in its own cell before this
+-   everything from `%%cython` to the next empty line will be saved to a temporary file, turned into a C code using cython and then compiled into a python module which is then imported (as if ran through `pyximport`)
+-   TODO!!! fixme: cyLaplacian7 is broken in the codes/python/optim\*py
 
 ``` {.python}
-  %%cython --compile-args=-Ofast --compile-args=-march=ivybridge --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-funsafe-math-optimizations --compile-args=-fopenmp --link-args=-fopenmp
+  %%cython --compile-args=-Ofast --compile-args=-march=native --compile-args=-fno-tree-loop-vectorize --compile-args=-fno-tree-slp-vectorize --compile-args=-fno-ipa-cp-clone --compile-args=-funsafe-math-optimizations --compile-args=-fopenmp --link-args=-fopenmp
   import cython,numpy,os
   from cython.parallel import prange, parallel
   cimport numpy
@@ -518,6 +594,7 @@ C+Python = Cython: an optimised RHS
 <span class="label">Thread-level Scaling of cyLaplacian6</span>
 ``` {#fig:cyLaplacian6_scaling .python}
   import matplotlib.pyplot as plt
+  import os
   results=[]
   for threads in range(1,13):
       os.environ["OMP_NUM_THREADS"]=str(threads)
@@ -528,10 +605,19 @@ C+Python = Cython: an optimised RHS
   plt.plot(threads, timedata[0]/(timedata*threads))
 ```
 
-![](images/cyLaplacian6_scaling.png)
+Exercises
+---------
+
+TODO!!! A couple of codes to profile and optimise
 
 OpenMP/TBB
 ----------
+
+-   both can do about the same thing
+-   OpenMP has lower learning curve, but becomes very difficult on larger, more complex problems
+-   OpenMP can also be impossible to use when taking advantage of external libraries if they use threads, too
+-   TBB is cross platfrom and written in standard C++ so compiles and works everywhere
+-   OpenMP requires compiler and run-time support which is sometimes buggy and **often** does not support the whole standard
 
 Vector Unit and GPU: SIMD/MIMD
 ------------------------------

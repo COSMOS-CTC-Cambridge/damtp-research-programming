@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-
 import mpi4py
 from mpi4py import MPI
 import distributed_computing_worker
 
-def main():
+def main2():
     me=distributed_computing_worker.rankinfo(sizes=[3,4,5])
     cartesian_topology=distributed_computing_worker.topology(me)
     ghosts = distributed_computing_worker.ghost_data(cartesian_topology, me.localsizes)
@@ -25,5 +24,4 @@ def main():
     return result_g, local_array
 
 if (__name__ == "__main__"):
-    main()
-    
+    distributed_computing_worker.main()

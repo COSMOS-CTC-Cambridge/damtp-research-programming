@@ -65,7 +65,13 @@ Try:
 -   
 -   Enable bash kernel:
 -   Finally add `c.NotebookApp.contents_manager_class ` 'notedown.NotedownContentsManager'= and `c.NotebookApp.server_extensions.append('ipyparallel.nbextension')` to `${HOME}/.jupyter/jupyter_notebook_config.py`
--   and run …
+-   and run … or add those on command line:
+
+``` {.bash}
+  jupyter notebook --no-browser --NotebookApp.contents_manager_class='notedown.NotedownContentsManager'
+  --NotebookApp.nbserver_extensions=='["pyparallel.nbextension"]'
+```
+
 -   create ipyparallel profile called "mpi":
 -   make sure it defaults to MPI by adding (or inserting) the line to
 -   also give the cluster the "training<sub>cluster0</sub>" name by inserting the line

@@ -7,6 +7,16 @@ import time as timemod
 import pstats
 import os
 
+def Laplacian0(data, lapl, d, N):
+    for kk in range(1,data.shape[2]-1):
+        for jj in range(1,data.shape[1]-1):
+            for ii in range(1,data.shape[0]-1):
+                lapl[ii,jj,kk] = (
+                    (data[ii-1,jj,kk] - 2*data[ii,jj,kk] + data[ii+1,jj,kk])/(d[0]*d[0]) +
+                    (data[ii,jj-1,kk] - 2*data[ii,jj,kk] + data[ii,jj+1,kk])/(d[1]*d[1]) +
+                    (data[ii,jj,kk-1] - 2*data[ii,jj,kk] + data[ii,jj,kk+1])/(d[2]*d[2]))
+    return
+
 def Laplacian1(data, lapl, d, N):
     for ii in range(1,data.shape[0]-1):
         for jj in range(1,data.shape[1]-1):
@@ -69,7 +79,9 @@ def RunSome(funcflops):
 
 SIZE=100
 RunList=[{"func":"Laplacian2", "flop":(SIZE-2)**3*17}]
-results = RunSome([{"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
+results = RunSome([
+    {"func":"Laplacian0", "flop":(SIZE-2)**3*17},
+    {"func":"Laplacian1", "flop":(SIZE-2)**3*17}]+RunList)
 
 def Laplacian3(data, lapl, d, N):
     dx2, dy2, dz2 = 1./(d[0]*d[0]), 1./(d[1]*d[1]), 1./(d[2]*d[2])

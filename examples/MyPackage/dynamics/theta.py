@@ -1,0 +1,2 @@
+class Theta:
+    pass

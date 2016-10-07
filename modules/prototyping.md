@@ -18,8 +18,8 @@ Linear Solves
 \nabla^2 \phi(x,y) - g(x,y) = 0
 \end{equation}
 
--   Direct Solce is\( O((Nx*Ny)^2) \) complexity, so be careful
--   It also needs that amount of storage!
+-   Direct Solve is \( O((Nx*Ny)^3) \) complexity, so be careful
+-   It also needs \( O((Nx*Ny)^2) \) of storage!
 -   Let's see what the code looks like.
 
 ``` {.python}
@@ -184,7 +184,7 @@ Linear Solves
 ```
 
 -   the defaults are "GMRES" and "ILU", which combined gives an iterative method; we want a direct solve
-    -   but `LU` is uniprocessor so multicore versions must be ran with something else
+    -   but `LU` is uniprocessor so multirank versions must be ran with something else
 
 ``` {.python}
   if (comm.size <= 1):
@@ -230,20 +230,20 @@ Linear Solves
 ### Iterative Solver
 
 -   PETSc's Krylov SPace (KSP) solvers are in principle iterative KSP solvers
-    -   this avoids matrix inversion, which is and \(O(N^2.8)\) operation (Strassen; Coppersmith-Winograd is \(O(N^2.373)\) but not know to been ever implemented --- in fact Strassen is not used in practice either)
+    -   this avoids matrix inversion, which is an \(O(N^2.8)\) operation (Strassen; Coppersmith-Winograd is \(O(N^2.373)\) but not know to been ever implemented --- in fact Strassen is not used in practice either)
     -   iterative KSP solvers get away with iterating matrix-vector only, which is \(O(N^2)\)
     -   one thus hopes KSP solver does not take too many iterations compared to (iterative) inversion
-    -   iterative is more also numerically more stable and more accurate, so never any point in direct inversion
+    -   iterative is also numerically more stable and more accurate, so never any point in direct inversion
     -   our trick above was to use "LU" as the preconditioner: that preconditoiner actually *solves* the system, leaving the KSP iterative part unemployed (hence we could use "PREONLY")
 -   so what does this look like as an iterative solver?
     -   since we process command line options on line `ksp.setFromOptions()` all we need to do is pass the correct parameters
     -   `-ksp_type gmres` is the default and actually very good, so we'll use that
     -   `-pc_type ilu` is also the default, not necessarily the best but there are dozens to choose from and the best is problem dependent, so we use the default here, too
-    -   note there is *no need* to alter the source code at all
+    -   note there is *no need* to alter the source code *at all*
 
 ``` {.bash}
   %%bash
-  mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20 -ksp_type gmres -pc_type ilu
+  mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20 -ksp_type gmres -pc_type bjacobi
 ```
 
 -   Next we forget about linearity and use non-linear solvers; for familiarity and emphasising the small differences we first solve \(\nabla^2 \phi(x,y) - g(x,y) = 0\) and then an actual non-linear equation

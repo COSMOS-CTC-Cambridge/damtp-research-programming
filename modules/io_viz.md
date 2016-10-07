@@ -72,8 +72,11 @@ Performant I/O
     -   latency is more likely to ruin performance than anything else, so unless you know exactly where the I/O bottleneck is, do big writes into big files, even buffering internally in your code if necessary
     -   and big writes really means big: a 10 MB write is not a big write, let alone a big file!
     -   unfortunately, python is not very good at demonstrating this but you can try to compile and run this (available in `codes/cpp/chunk_size_effect.c`)
+-   TODO!!! This does not get exported
+-   TODO!!! and this does not compile on cosmos!
 
 ``` {.example}
+
 #define _GNU_SOURCE 1
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE 700
@@ -122,7 +125,8 @@ Parallel I/O
     -   they can write a single file simultaneously from all workers
     -   may do some hardware-based optimisations behind the scenes
     -   can also map the writes to the MPI topology
-    -   needs a bit of a learning curve, unless you chose to use PETSc:
+    -   needs a bit of a learning curve, unless you chose to use PETSc or h5py:
+    -   TODO!!!! cosmos PETSc does not do HDF5???
 
 ``` {.python}
   from __future__ import division
@@ -166,10 +170,27 @@ Parallel I/O
 -   and check we got the same stuff back
 
 ``` {.python}
-  print("Are they equal? " + str(bool(vec1.equal(vec2))))
+  print("Are they equal? " + ["No!", "Yes!"][vec1.equal(vec2)])
 ```
 
 -   if you run this in parallel using parallel HDF5 library, you just got all the hard bits for free
+-   and a similar example in `h5py`
+
+``` {.python}
+  from mpi4py import MPI
+  import h5py
+  import tempfile
+  import os
+  fn=tempfile.NamedTemporaryFile(dir="../codes/python/", prefix="hdf5_visualisation_example", suffix=".h5", delete=False)
+  fn.close()
+  rank = MPI.COMM_WORLD.rank
+  f = h5py.File(fn.name, 'w', driver='mpio', comm=MPI.COMM_WORLD)
+  dset = f.create_dataset('test', (4,), dtype='i')
+  dset[rank] = rank
+  f.close()
+  os.unlink(fm.name)
+```
+
 -   performance might still be bad, because
 
 Know your filesystem
@@ -291,3 +312,4 @@ A simple example with HDF5 without remote `pvserver`
   h5file.close()
 ```
 
+-   now to paraview which we unfortunately cannot do in Jupyter
