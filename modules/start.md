@@ -66,3 +66,25 @@ Load the *ipyparallel* module for parallel computations
 And start the *jupyter notebook*:
 ---------------------------------
 
+``` {.bash}
+  jupyter  notebook --no-browser --NotebookApp.nbserver_extensions='{"ipyparallel.nbextension":True}' \
+  --NotebookApp.contents_manager_class='notedown.NotedownContentsManager'
+```
+
+Note down the port jupyter listens on and start ssh tunnel
+----------------------------------------------------------
+
+-   The port can be found from its output. Look for a line like
+
+``` {.bash}
+  [I 23:51:59.881 NotebookApp] The Jupyter Notebook is running at: http://localhost:8888/
+```
+
+-   Here the port number is `8888` (which is the default but only the first user will be able to use that).
+-   Then start the ssh tunnel with
+
+``` {.bash}
+  ssh -N -L JUPYTERS_PORT:localhost:JUPYTERS_PORT CRSID@beehive.maths.cam.ac.uk
+```
+
+Now open a browser and surf to [http://localhost:JUPYTERS\_PORT/](http://localhost:JUPYTERS_PORT/)

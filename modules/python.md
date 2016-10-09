@@ -90,8 +90,8 @@ This will be used heavily, so a few interactive examples
   x[2:-2]
 ```
 
-=numpy= has some extra slicing features
----------------------------------------
+numpy has some extra slicing features
+-------------------------------------
 
 -   For numerical work in python, you should nearly always use the `numpy` package. We'll cover packages later, but for now the numpy package can be used after the command `import numpy`.
 -   First, let's see what a numpy array looks like: this is a 2x3x4 array.
@@ -214,10 +214,10 @@ Control flow statements
 ```
 
 ``` {.python}
-  print [i for i in range(0,4)]
-  print [str(i) for i in range(0,4)]
-  for i in range(4): print str(i)+","
-  print ','.join([str(i) for i in range(0,4)])
+  print([i for i in range(0,4)])
+  print([str(i) for i in range(0,4)])
+  for i in range(4): print(str(i)+",")
+  print(','.join([str(i) for i in range(0,4)]))
 ```
 
 -   there are others, see the [tutorial for python 2](https://docs.python.org/2/tutorial/) and [tutorial for python 3](https://docs.python.org/3/tutorial/)
@@ -336,16 +336,17 @@ Control flow statements
 -   especially with `reduce` and `map` operating on lists
 
 ``` {.python}
+  from __future__ import print_function
   list_of_values = ["a", "b", "c", "abc"]
   uppercase_list_of_values = map(lambda x: x.upper(), list_of_values)
-  print("uppercase_list_of_values = ",)
+  print("uppercase_list_of_values = ",end="")
   print("".join(uppercase_list_of_values))
   uppercase_list_of_values_without_lambda = [x.upper() for x in list_of_values]
-  print("uppercase_list_of_values_without_lambda = ",)
+  print("uppercase_list_of_values_without_lambda = ",end="")
   print(uppercase_list_of_values_without_lambda)
   import functools
   joined_list_of_values = functools.reduce(lambda x,y: x+y, list_of_values, "")
-  print("joined_list_of_values = ",)
+  print("joined_list_of_values = ",end="")
   print(joined_list_of_values)
 ```
 
@@ -443,31 +444,28 @@ Some standard modules
 
 -   we have already encoutered the `os` and `sys` modules: they are part of the python standard library
     -   of particular interest might be `sys.stdin`, `sys.stdout`, and `sys.stderr`
--   others include
-
-    `re`  
-    regular expression facilities, e.g.
+-   `re` :: regular expression facilities, e.g.
 
 ``` {.python}
   import re
   re.sub(r'(\b[a-z]+ )(\1)+', r'\1', 'please remove repeated repeated repeated words')
 ```
 
-urllib2  
+`urllib2`  
 we have already seen what this can do: access data using a URL
 
-datetime  
+`datetime`  
 everything you ever wanted to do with dates and timezone-less times between 0.0.0 CE and 31.12.9999 CE
 
 -   for proper timezone support, an external module called `pytz` is needed
 
-timeit  
+`timeit`  
 you may want to use `timeit.Timer()` instead of the next module for some performance measurements
 
-cProfile  
+`cProfile`  
 performance profiler, we'll get to know this later
 
-doctest  
+`doctest`  
 a handy code quality checker which runs tests embedded into the docstrings
 
 ``` {.python}
@@ -494,7 +492,7 @@ a handy code quality checker which runs tests embedded into the docstrings
   doctest.testmod()
 ```
 
-unittest  
+`unittest`  
 a more sophisticated testing environment; an evern better one is available in an external module called `nose`
 
 ### Packages: sets of modules organised in directories
@@ -583,7 +581,7 @@ On I/O
   import tempfile
   placeholder_please_ignore_me=tempfile.NamedTemporaryFile()
   filename = placeholder_please_ignore_me.name
-  print filename
+  print(filename)
   with open(filename, "w") as f:
       f.write("this writes one line in the file\n")
       f.write("this writes part of a line ")
@@ -597,7 +595,7 @@ On I/O
   print("The file object f is now closed: "+str(f))
   print("The .read method read {l} bytes: {d}".format(l=rlen, d=some_data))
   print("The .readlines method read from current file location to the end:\n"+"".join(lines))
-  #placeholder_please_ignore_me.close()
+  placeholder_please_ignore_me.close()
 ```
 
 -   the standard library provides a module `StringIO` and class `StringIO.StringIO` which for all practical purposes is a file, but only exists in memory
