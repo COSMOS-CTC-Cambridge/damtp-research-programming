@@ -1,3 +1,45 @@
+Contents
+========
+
+Lecture 1: Some Good Programming Practices
+------------------------------------------
+
+Lecture 2: Hands On 1
+---------------------
+
+Lecture 3: Python
+-----------------
+
+Lecture 4: Hands On 2
+---------------------
+
+Lectures 5-8: Cantab Guest Stars & Hands On with More Good Practices
+--------------------------------------------------------------------
+
+Lecture 9: On Algorithms and Optimisation
+-----------------------------------------
+
+Lecture 10: Hands On
+--------------------
+
+Lecture 11: Parallel Programming
+--------------------------------
+
+Lecture 12: Hands On
+--------------------
+
+Lecture 13: More Parallel Programming and Prototyping in Python
+---------------------------------------------------------------
+
+Lecture 14: Hands On
+--------------------
+
+Lecture 15: I/O and Visualisation
+---------------------------------
+
+Lecture 16: Hands On
+--------------------
+
 First we need to set up a working environment
 =============================================
 
