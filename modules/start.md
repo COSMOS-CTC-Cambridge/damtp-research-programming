@@ -71,6 +71,8 @@ And start the *jupyter notebook*:
   --NotebookApp.contents_manager_class='notedown.NotedownContentsManager'
 ```
 
+-   this asks for a password to be created if you have not ran jupyter before; you need this when you open the page in your browser
+
 Note down the port jupyter listens on and start ssh tunnel
 ----------------------------------------------------------
 
@@ -81,10 +83,15 @@ Note down the port jupyter listens on and start ssh tunnel
 ```
 
 -   Here the port number is `8888` (which is the default but only the first user will be able to use that).
--   Then start the ssh tunnel with
+-   Then open a new terminal on your desktop/laptop and start the ssh tunnel with
 
 ``` {.bash}
   ssh -N -L JUPYTERS_PORT:localhost:JUPYTERS_PORT CRSID@beehive.maths.cam.ac.uk
 ```
 
+-   this password is still the normal maths password
+-   after asking for password this will just sit there, no shell, no prompt, nothing, it just tunnels data
+
 Now open a browser and surf to [http://localhost:JUPYTERS\_PORT/](http://localhost:JUPYTERS_PORT/)
+--------------------------------------------------------------------------------------------------
+
