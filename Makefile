@@ -3,7 +3,9 @@ MDFILES_ALL=modules/algorithms.md modules/io_viz.md modules/optimisation.md modu
 MDFILES=modules/python.md modules/start.md
 SRCFILES=codes/python/distributed_computing_interactive.py codes/python/ipyparallel_and_mathematica.py codes/python/mixed_mode_mapreduce.py codes/python/mpi_hello_world.py codes/python/profile_example.py codes/python/debugging_pdb.py codes/python/debugging_simple.py codes/python/debugging_threads.py codes/cpp/c_segfaults1.c codes/cpp/c_segfaults2.c codes/cpp/subdir0/input.dat codes/cpp/subdir1/input.dat codes/python/nl_poisson_snes.py codes/python/poisson_ksp.py codes/python/poisson_snes.py
 PDFFIELS=course.pdf
-PNGFILES=modules/images/boundary_conditions.png modules/images/ghosts.png modules/images/MPI_subarray.png
+PNGFILES=modules/images/boundary_conditions.png modules/images/ghosts.png modules/images/MPI_subarray.png modules/images/git_dag_1.png modules/images/git_dag_2.png modules/images/git_dag_3.png modules/images/git_dag_4.png modules/images/git_dag_5.png modules/images/git_dag_6.png 
+
+
 DELETEFILESONRELEASE = $(filter-out Makefile,$(wildcard *))
 
 BRANCH=$(shell git symbolic-ref -q --short HEAD)
