@@ -1,3 +1,6 @@
+THIS NEEDS BASH KERNEL, REMEMBER TO CHANGE FROM MENU
+====================================================
+
 git, a distributed and decentralised version control system
 ===========================================================
 
@@ -80,7 +83,7 @@ Merge
 -   first just initialise it
 
 ``` {.bash}
-    DIR=$(mktemp --directory ./git-repo-XXXXXXXX)
+  DIR=$(mktemp --directory ./git-repo-XXXXXXXX)
   cd ${DIR}
   git init .
 ```
@@ -88,7 +91,7 @@ Merge
 -   start adding files, first one file and the `v0.1` tag
 
 ``` {.bash}
-    echo 'Our file has initially this content' > my_file.txt
+  echo 'Our file has initially this content' > my_file.txt
   git add my_file.txt
   git commit --message='Initial commit of version 0.1'
   git tag --annotate --message='This tags the HEAD as version 0.1 with tag name v0.1' 'v0.1'
@@ -97,7 +100,7 @@ Merge
 -   then we edit the file and add another, this becomes the "B" in our graph
 
 ``` {.bash}
-    sed --in-place 's/has initially/now has/' my_file.txt
+  sed --in-place 's/has initially/now has/' my_file.txt
   echo 'We also now have another file here' > my_second_file.txt
   git add my_second_file.txt
   git commit --all --message='Added my_second_file.txt and edited my_file.txt to reflect the current state'
@@ -106,14 +109,14 @@ Merge
 -   create the new `MyBranch` branch and switch to it
 
 ``` {.bash}
-    git branch MyBranch
+  git branch MyBranch
   git checkout MyBranch
 ```
 
 -   add a file to the new branch
 
 ``` {.bash}
-    echo 'This file only exists on MyBranch' > file_on_MyBranch.txt
+  echo 'This file only exists on MyBranch' > file_on_MyBranch.txt
   git add file_on_MyBranch.txt
   git commit --all --message='Created a new branch called MyBranch and added file_on_MyBranch.txt'
 ```
@@ -121,7 +124,7 @@ Merge
 -   switch back to `master` (you could branch from `MyBranch` again, but that's not what our graph looks like) and create `AnotherB`
 
 ``` {.bash}
-    git checkout master
+  git checkout master
   git branch AnotherB
   git checkout AnotherB
 ```
@@ -129,7 +132,7 @@ Merge
 -   edit `my_file.txt` on `AnotherB` (elsewhere its contents are unchanged)
 
 ``` {.bash}
-    sed --in-place 's/now has this content/has different content on AnotherB/' my_file.txt
+  sed --in-place 's/now has this content/has different content on AnotherB/' my_file.txt
   git add my_file.txt
   git commit --message='Edited my_file.txt to reflect the state on current branch'
 ```
@@ -137,7 +140,7 @@ Merge
 -   add a new file to this branch
 
 ``` {.bash}
-    echo 'A completely new file on AnotherB' > file_on_AnotherB.txt
+  echo 'A completely new file on AnotherB' > file_on_AnotherB.txt
   git add file_on_AnotherB.txt
   git commit --message='Added file_on_AnotherB.txt'
 ```
@@ -154,7 +157,7 @@ Merge
 
 -   suppose you want to incorporate `MyBranch` to `master` now
     -   it does not matter who made the changes in `MyBranch`
--   whole on `master` run `git merge MyBranch`
+-   while on `master` run `git merge MyBranch`
 
 ``` {.bash}
   git merge MyBranch
@@ -173,3 +176,7 @@ Merge
 
 ![](images/git_dag_6.png)
 
+-   this is the final state of the repo
+
+``` {.example}
+Need to teach push, fetch, git diff FETCH_HEAD and then merge (pull)

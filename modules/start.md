@@ -63,6 +63,11 @@ Load the *ipyparallel* module for parallel computations
 
 `module load ipyparallel`
 
+Add bash kernel to jupyter
+--------------------------
+
+`python -m bash_kernel.install`
+
 And start the *jupyter notebook*:
 ---------------------------------
 
@@ -95,3 +100,39 @@ Note down the port jupyter listens on and start ssh tunnel
 Now open a browser and surf to [http://localhost:JUPYTERS\_PORT/](http://localhost:JUPYTERS_PORT/)
 --------------------------------------------------------------------------------------------------
 
+-   now you need the other password
+
+When you come BACK to your jupyter after disconnecting
+------------------------------------------------------
+
+-   you need to take the same steps again, except `git clone`
+-   if there have been updates to the lecture contents, you need
+
+``` {.bash}
+  cd ~/HPC_course_student
+  git pull
+```
+
+and if that fails because you have altered one of the lecture notes (this will happen accidentally when jupyter autosaves your changes) you can undo the changes (before starting jupyter again) with
+
+``` {.bash}
+  cd ~/HPC_course_student
+  git reset --hard 
+```
+
+or you can simply remove the wjole directory if you have not added any files.
+
+MPI and ipcluster
+-----------------
+
+-   From the MPI lecture onwards you will also need `ipcluster` in the background; either open a third ssh connection or arrange to run the following in one of your existing ones to start it
+-   create a profile for MPI jobs (only do this once)
+
+``` {.bash}
+  ipython profile create --parallel --profile=mpi
+```
+
+-   you should define an environment varible `REPO_ROOT` which should point to the base of your course git repo tree before starting
+
+``` {.ash}
+  ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True 

@@ -485,15 +485,15 @@ a handy code quality checker which runs tests embedded into the docstrings
       Calculate a*x + y.
 
       >>> daxpy_fails(2.0,3.0,4.0)
-      10.1
+      10.0
       '''
-      return a*x+y
+      return a*x+y+1
 
   doctest.testmod()
 ```
 
 `unittest`  
-a more sophisticated testing environment; an evern better one is available in an external module called `nose`
+a more sophisticated testing environment; an even better one is available in an external module called `nose`
 
 ### Packages: sets of modules organised in directories
 
@@ -635,14 +635,11 @@ a representative of a class, think of birds again
 inheritance  
 classes form an "ancestry" tree, where "children" inherit "parents", but this is a very liberal family so a child can have an arbitrary number of parents (including 0 in python v2, but in v3 all children implicitly inherit "object")
 
-class  
-a variable defined on the class namespace, be careful: only use immutables here!
-
-class  
+method  
 basically a function defined inside the namespace of a class
 
-instance  
-a variable defined inside a class method and attached to the instance (like the `self.flies` below)
+attribute  
+a variable defined on the class namespace is a *class attribute*, be careful: only use immutables here; a variable defined inside a class method is an *instance attribute* and gets attached to the instance (like the `self.flies` below)
 
 ``` {.python}
   class animalia(object):
