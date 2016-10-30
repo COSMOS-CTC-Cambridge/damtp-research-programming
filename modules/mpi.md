@@ -162,7 +162,8 @@ Let us initialise `ipyparallel` now. The first line just imports `ipyparallel` m
 ``` {.python}
   # We need to load numpy also on frontend
   import numpy
-  c[:].map_sync(lambda x:x+1, numpy.random.random(18))
+  data = numpy.random.random(18)
+  c[:].map_sync(lambda x:x+1, data)
 ```
 
 -   The slice `c[:]` simply chooses which workers to use.
@@ -170,13 +171,13 @@ Let us initialise `ipyparallel` now. The first line just imports `ipyparallel` m
     -   We could use just 2 with
 
 ``` {.python}
-  c[:2].map_sync(lambda x:x+1, numpy.random.random(18))
+  c[:2].map_sync(lambda x:x+1, data)
 ```
 
 -   or even from the middle of the range:
 
 ``` {.python}
-  c[1:3].map_sync(lambda x:x+1, numpy.random.random(18))
+  c[1:3].map_sync(lambda x:x+1, data)
 ```
 
 -   We will soon learn that there are other ways to do this, too:
@@ -669,7 +670,11 @@ Distributed Computing
 ### initialise the lattice
 
 -   we have not yet looked at I/O so set up initial data to be just squares of consecutive integers starting from our MPI rank number squared
-    -   TODO!!! Change to e.g. a \( (x-xmin)(x-xmax)(y-ymin)(y-ymax) \)
+
+``` {.example}
+- TODO!!! Change to e.g. a \( (x-xmin)(x-xmax)(y-ymin)(y-ymax) \)
+```
+
 -   Notice how it is somewhat complicated to find the global coordinates, but libraries like `PETSc` provide easy ways for this
 -   an additional complication comes from the fact that we only want to initialise the non-ghosted regions
 
@@ -689,14 +694,16 @@ Distributed Computing
       size = topo.topology.Get_size()
       local_array = numpy.zeros(me.localsizes)
       procsalong, periods, mycoord = topo.topology.Get_topo()
-      mycorner = mycoord*numpy.array(me.localsizes)
-      for z in xrange(me.localsizes[0]):
-          for y in xrange(me.localsizes[1]):
-              start = mycorner[2] + 5*(y+mycorner[1])*procsalong[2] + 3*5*(z+mycorner[0])*procsalong[1]*procsalong[2]
-              stop = start + me.localsizes[2]
-              local_array[z,y,:] = numpy.arange(start, stop, step=1)**2
+      mycorner = mycoord*(numpy.array(me.localsizes)-2)
+      sz, sy, sx = numpy.array(me.localsizes)-2
+      for z in xrange(sz):
+          for y in xrange(sy):
+              start = mycorner[0] + sx*(y+mycorner[1])*procsalong[0] + sy*sx*(z+mycorner[2])*procsalong[1]*procsalong[0]
+              stop = start + sx
+              local_array[z+1,y+1,1:-1] = numpy.arange(start, stop, step=1)**2
       return local_array
   directview["initialise_values"]=initialise_values
+
 ```
 
 ### compute the gradients over the global lattice

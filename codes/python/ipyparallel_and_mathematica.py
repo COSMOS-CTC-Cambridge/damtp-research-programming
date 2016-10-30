@@ -10,8 +10,9 @@ if ("scipy" in dir()): print("scipy here!")
 
 # We need to load numpy also on frontend
 import numpy
-c[:].map_sync(lambda x:x+1, numpy.random.random(18))
+data = numpy.random.random(18)
+c[:].map_sync(lambda x:x+1, data)
 
-c[:2].map_sync(lambda x:x+1, numpy.random.random(18))
+c[:2].map_sync(lambda x:x+1, data)
 
-c[1:3].map_sync(lambda x:x+1, numpy.random.random(18))
+c[1:3].map_sync(lambda x:x+1, data)

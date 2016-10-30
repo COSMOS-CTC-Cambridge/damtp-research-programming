@@ -224,14 +224,16 @@ def initialise_values(me, topo):
     size = topo.topology.Get_size()
     local_array = numpy.zeros(me.localsizes)
     procsalong, periods, mycoord = topo.topology.Get_topo()
-    mycorner = mycoord*numpy.array(me.localsizes)
-    for z in xrange(me.localsizes[0]):
-        for y in xrange(me.localsizes[1]):
-            start = mycorner[2] + 5*(y+mycorner[1])*procsalong[2] + 3*5*(z+mycorner[0])*procsalong[1]*procsalong[2]
-            stop = start + me.localsizes[2]
-            local_array[z,y,:] = numpy.arange(start, stop, step=1)**2
+    mycorner = mycoord*(numpy.array(me.localsizes)-2)
+    sz, sy, sx = numpy.array(me.localsizes)-2
+    for z in xrange(sz):
+        for y in xrange(sy):
+            start = mycorner[0] + sx*(y+mycorner[1])*procsalong[0] + sy*sx*(z+mycorner[2])*procsalong[1]*procsalong[0]
+            stop = start + sx
+            local_array[z+1,y+1,1:-1] = numpy.arange(start, stop, step=1)**2
     return local_array
 directview["initialise_values"]=initialise_values
+
 
 def compute_grad(topology, local_array, ghostdefs):
     '''Compute the 2nd order central finite difference gradient of the data.

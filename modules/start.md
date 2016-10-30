@@ -120,7 +120,7 @@ and if that fails because you have altered one of the lecture notes (this will h
   git reset --hard 
 ```
 
-or you can simply remove the wjole directory if you have not added any files.
+or you can simply remove the whole directory if you have not added any files.
 
 MPI and ipcluster
 -----------------
@@ -132,7 +132,7 @@ MPI and ipcluster
   ipython profile create --parallel --profile=mpi
 ```
 
--   you should define an environment varible `REPO_ROOT` which should point to the base of your course git repo tree before starting
+-   you should define an environment variable `REPO_ROOT` which should point to the base of your course git repo tree before starting
 
 ``` {.ash}
   ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True 
