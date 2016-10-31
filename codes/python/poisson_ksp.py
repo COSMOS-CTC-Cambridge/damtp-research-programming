@@ -131,4 +131,4 @@ start = time.clock()
 cProfile.run("ksp.solve(field,sol)", sort="time")
 end = time.clock()
 
-ksp.getSolution()[:]
+print(ksp.getSolution().getArray()[:])

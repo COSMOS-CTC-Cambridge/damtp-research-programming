@@ -48,9 +48,7 @@ Maximum of the Gradient Using PETSc
   comm = PETSc.COMM_WORLD
 ```
 
--   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed
-
-=m=, `n`, or `p`.
+-   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed `m`, `n`, or `p`.
 
 ``` {.python}
   OptDB = PETSc.Options() #get PETSc option DB
@@ -107,7 +105,7 @@ Maximum of the Gradient Using PETSc
       temp=numpy.array(numpy.gradient(field_array[:]))[:,1:-1,1:-1,1:-1]
       gradients=numpy.zeros(temp.shape[1:]+(temp.shape[0],))
       for coo in [0,1,2]:
-          gradients[:,:,:,coo] = temp[0][:,:,:]
+          gradients[:,:,:,coo] = temp[coo][:,:,:]
       #grad[:]=numpy.array(numpy.gradient(field_array[:]))[:,1:-1,1:-1,1:-1].swapaxes(0,1).swapaxes(1,2).swapaxes(2,3)
       grad_array[:] = gradients[:,:,:,:]
 ```
@@ -146,14 +144,6 @@ Linear Solves
 -------------
 
 ### Direct Solve
-
-``` {.example}
-These *should* work but *don't*
-- Poisson equation \( \nabla^2 \phi(x,y) - g(x,y) = 0 \)
-- Poisson equation \[ \nabla^2 \phi(x,y) - g(x,y) = 0 \]
-- Poisson equation 
-\[ \nabla^2 \phi(x,y) - g(x,y) = 0 \]
-```
 
 -   Poisson equation
 
@@ -199,9 +189,7 @@ These *should* work but *don't*
   comm = PETSc.COMM_WORLD
 ```
 
--   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed
-
-=m=, `n`, or `p`.
+-   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed `m`, `n`, or `p`.
 
 ``` {.python}
   OptDB = PETSc.Options() #get PETSc option DB
@@ -360,14 +348,14 @@ These *should* work but *don't*
 -   Now we can have a look at the solution; we will later see how we could visualise this. The code in the git repo has a rudimentary visualiser built in.
 
 ``` {.python}
-  ksp.getSolution()[:]
+  print(ksp.getSolution().getArray()[:])
 ```
 
 -   That program was actually ran in an MPI distributed parallel fashion, PETSc just hides almost all of it. The only hints of MPI are in the *LocalVector* and *COMM<sub>WORLD</sub>* names. In this case, it ran with just one processor core, for reasons of interactive python. We can run a proper 8-way-parallel (8 *ranks*) quite easily, though: all we need is a "magic" string `%%bash` in our code below. First `git` checks out the correct version of the training codebase and then mpirun executes the code with 8 ranks. Finally it reverts back to master branch.
 
 ``` {.bash}
   %%bash
-  mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20
+  mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20
 ```
 
 ### Iterative Solver
@@ -386,7 +374,17 @@ These *should* work but *don't*
 
 ``` {.bash}
   %%bash
-  mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20 -ksp_type gmres -pc_type bjacobi
+  mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 -da_grid_z 20 -ksp_type gmres -pc_type bjacobi
+```
+
+-   Not very impressive as that was unirank, but **no** **change** **to** **code** and
+
+``` {.bash}
+  %%bash
+  mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 -da_grid_z 80 -ksp_type gmres -pc_type bjacobi
+  mpirun -np 2 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 -da_grid_z 80 -ksp_type gmres -pc_type bjacobi
+  mpirun -np 4 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 -da_grid_z 80 -ksp_type gmres -pc_type bjacobi
+  mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 -da_grid_z 80 -ksp_type gmres -pc_type bjacobi
 ```
 
 -   Next we forget about linearity and use non-linear solvers; for familiarity and emphasising the small differences we first solve \(\nabla^2 \phi(x,y) - g(x,y) = 0\) and then an actual non-linear equation

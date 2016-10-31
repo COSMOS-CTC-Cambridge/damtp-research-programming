@@ -51,7 +51,7 @@ def compute_grad(dm, field, dmgrad, grad):
     temp=numpy.array(numpy.gradient(field_array[:]))[:,1:-1,1:-1,1:-1]
     gradients=numpy.zeros(temp.shape[1:]+(temp.shape[0],))
     for coo in [0,1,2]:
-        gradients[:,:,:,coo] = temp[0][:,:,:]
+        gradients[:,:,:,coo] = temp[coo][:,:,:]
     #grad[:]=numpy.array(numpy.gradient(field_array[:]))[:,1:-1,1:-1,1:-1].swapaxes(0,1).swapaxes(1,2).swapaxes(2,3)
     grad_array[:] = gradients[:,:,:,:]
 

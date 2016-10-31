@@ -61,7 +61,7 @@ Go to the newly created directory
 Load the *ipyparallel* module for parallel computations
 -------------------------------------------------------
 
-`module load ipyparallel`
+`module load gcc/6.2.0 ipyparallel h5py/2.6.0-system-openmpi petsc`
 
 Add bash kernel to jupyter
 --------------------------
@@ -136,3 +136,8 @@ MPI and ipcluster
 
 ``` {.ash}
   ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True 
+```
+
+Course Survey, please fill in
+=============================
+
