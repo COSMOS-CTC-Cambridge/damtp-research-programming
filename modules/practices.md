@@ -99,7 +99,7 @@ echo 'Our file has initially this content' > my_file.txt
 git add my_file.txt
 git commit --message='Initial commit of version 0.1'
 git tag --annotate \
-  --message='This tags the HEAD as version 0.1 with tag name v0.1' 'v0.1'
+--message='This tags the HEAD as version 0.1 with tag name v0.1' 'v0.1'
 ```
 
 -   then we edit the file and add another, this becomes the "B" in our graph
@@ -124,7 +124,7 @@ git checkout MyBranch
 echo 'This file only exists on MyBranch' > file_on_MyBranch.txt
 git add file_on_MyBranch.txt
 git commit --all \
-  --message='Created a new branch called MyBranch and added file_on_MyBranch.txt'
+--message='Created a new branch called MyBranch and added file_on_MyBranch.txt'
 ```
 
 -   switch back to `master` (you could branch from `MyBranch` again, but that's not what our graph looks like) and create `AnotherB`
