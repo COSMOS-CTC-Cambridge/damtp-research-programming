@@ -108,8 +108,7 @@ git tag --annotate \
 sed --in-place 's/has initially/now has/' my_file.txt
 echo 'We also now have another file here' > my_second_file.txt
 git add my_second_file.txt
-git commit --all --message='Added my_second_file.txt '\
-  'and edited my_file.txt to reflect the current state'
+git commit --all --message='Added my_second_file.txt and edited my_file.txt to reflect the current state'
 ```
 
 -   create the new `MyBranch` branch and switch to it

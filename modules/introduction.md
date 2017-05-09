@@ -5,7 +5,7 @@ Getting the Course Material
 ---------------------------
 
 -   all the course material is available in a git repository — naturally
--   the repo to clone is `git clone git://git.csx.cam.ac.uk/damtp-ipcc/HPC_course_student`
+-   the repo to clone is TODO!!! ON GITHUB!!! `git clone git://git.csx.cam.ac.uk/damtp-ipcc/HPC_course_student`
 -   some instructions on using the course repo
     -   after cloning, make your own branch: `git branch mybranch`
     -   check it out: `git checkout mybranch`
