@@ -81,7 +81,9 @@ ${SRCFILES} ${PNGFILES}: ${MDFILES}
 	ipython3 codes/python/exportcleanup.py -- $@
 
 %.pdf: %.org
-	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)'
+	ln -s modules/images images
+	/usr/bin/emacs -nw --batch --user $(shell whoami) $< --eval '(org-mode)' --eval '(setq org-confirm-babel-evaluate nil)' --eval '(org-babel-tangle)' --eval '(org-pandoc-export-to-latex-pdf)'
+	rm -rf images
 
 cleanSRC:
 	rm -f ${SRCFILES} ${MDFILES} ${PNGFILES}
