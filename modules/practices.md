@@ -299,7 +299,7 @@ git diff FETCH_HEAD
 -   the diff also shows there are no conflicts, so we can
 
 ``` bash
-git merge FETCH_HEAD
+git merge --no-edit FETCH_HEAD
 ```
 
 -   now we can push again
