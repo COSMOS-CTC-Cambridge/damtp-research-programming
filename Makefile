@@ -11,8 +11,7 @@ ORGFILES=course.org plans.org slides.org todo.org \
 	modules/requirements_for_environment.org \
 	modules/shell.org \
 	modules/unfinished.org \
-	modules/start.org \
-	modules
+	modules/start.org
 MDFILES_ALL=modules/introduction.md \
 	modules/practices.md \
 	modules/python.md \
