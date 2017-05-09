@@ -1,4 +1,3 @@
-
 import os
 print("Current working directory is "+os.getcwd())
 import MyModule

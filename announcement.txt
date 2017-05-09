@@ -1,0 +1,74 @@
+A short twelve-session hands-on course in Advanced Research Programming for graduate students and postdocs will be offered from 10 May 2016 by Dr Juha Jäykkä, who is Project Manager of the award-winning COSMOS Intel Parallel Computing Centre (IPCC) here in DAMTP.  This unique opportunity will be very useful for those who
+
+- want to learn transferable skills in Big Data, software development etc
+- will need to use numerical methods in their research
+- need to make their code faster by factors of 10 to 100(!)
+- need to scale up their problem sizes to work on high performance systems
+
+The abstract for the course is attached.  It will be taught interactively in the CATAM room and the session dates and times are:
+
+        10/5: 10-12 and 14-16
+        12/5: 10-12 and 14-16
+        17/5: 10-12 and 14-16
+        19/5: 10-12 and 14-16
+        24/5: 10-12 and 14-16
+        26/5: 10-12 and 14-16
+
+There are a limited number of places available on the course (beyond those reserved already), so please contact Juha Jäykkä <jj411@cam.ac.uk> before 10am, Tuesday 2nd May 2017 to apply.  Please very briefly give your status (PhD student/postdoc/etc), your CMS group and one sentence about your research interests, as well as whether you have access to departmental desktops.  This course was already offered in October 2016 and is very likely to be part of a new STFC CDT in Data Intensive Science, so places will be more restricted in the new academic year.  
+
+Abstract
+
+Research and Parallel Programming
+Lecturer:  Dr Juha Jäykkä
+
+Scientific research is increasingly dependent on computers, and we at DAMTP 
+are in a rather unique position to be at the leading edge of developing the 
+methods and programs we need. This poses several challenges to the early stage 
+researcher, some of which I will address in this workshop-style interactive 
+training.
+
+Topics covered will be mostly relevant to High Performance Data Analytics, 
+best practices for sustainable research software - software which can still be 
+understood and further developed in 5 years time, writing efficient and 
+optimised codes, and parallel programming.
+
+The main focus is to spend the absolute minimum amount of time in peripheral 
+things like how to write a parallel program, and instead show with real-life 
+examples how things can be done both quickly and easily while still ensuring 
+the program is well written, efficient, and scales to future problems as well 
+as present (longevity).
+
+You may find this useful if you are using or going to use any high performance 
+computing systems, if you are involved in writing research software, or if you 
+are frustrated by how slow your matlab/mathematica/python/C/fortran etc code 
+is or how much memory it needs.
+
+In particular, the course will
+- expect you know the basics of using a UNIX shell, there's a decent tutorial you should look at at
+  http://www.ee.surrey.ac.uk/Teaching/Unix/ 
+- cover basic software development practices
+- introduce you to the most important (from a scientist's point of view) parts of the python language
+- after an interlude by Cantab, we will continue to guide you to creating efficient programs
+  - COSMOS IPCC at DAMTP can help you there
+  - e.g. MODAL program now 100$\times$ faster than before
+  - another cosmology code more than 10$\times$ faster (actually the original was so slow it never finished,
+    which gives just a lower limit of 10×)
+  - Fixing file-writing routine in yet another two codes to get 20x and 5x speedups.
+  - not only saves researchers' time but also allows more science to be done with the same resource
+    (supercomputer)
+  - Can save a lot of time with very little effort: yet another code achieved 3-fold speedup in just an hour's
+    worth of work
+- have a look at algorithms, how to choose a good one, what things to consider in the process, how the
+  computing hardware affects algorithms and imposes constraints on the algorithm etc
+- teach how to find out what your program spends most of its time doing ("profile" the code), apply the most
+  important and crucial first steps in removing computational bottlenecks and optimise your code: often these
+  initial steps can provide anything from 2- to 100-fold speedup depending on the case at hand so quite
+  relevant even for small programs
+- cover the basic concepts of parallel programming, paralel processing, distributed processing both using a
+  Map/Reduce approach and a more powerful message-passing based one (MPI); we also cover how to avoid the
+  nitty gritty details of message passing in
+- learning how to prototype tour codes quickly taking advantage of existing libraries and how this prototyping
+  can often turn into a heavy-lifting workhorse with practically no effort at all
+- towards the end, we will cover efficient data input/output, and parallel visualisation
+- together these provide a load of transferable skills: big data, software development, and programing skills
+  are all sought after by industry as well as the obvious problem solving skills
