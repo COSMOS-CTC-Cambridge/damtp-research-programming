@@ -18,7 +18,7 @@ THIS NEEDS BASH KERNEL, REMEMBER TO CHANGE FROM MENU
     -   regular commits help you even when there are no other developers
     -   and it gets you to the habit
 
-### Version Control System
+### Version Control System: git
 
 -   tracks and provides control over changes to the project (source code in most cases)
 -   enables to check when, why and by whom the given change was introduced (especially useful in hunting down bugs where something used to work before)
@@ -28,57 +28,55 @@ THIS NEEDS BASH KERNEL, REMEMBER TO CHANGE FROM MENU
     -   can usually automatically incorporate other people's changes to yours
     -   ability to pick only some edits by other people instead of all of them
 
-### git Building Blocks
+### A commit
 
-1.  A commit
+-   Snapshot of the state of project when the given (set of) change(s) was introduced together with metadata
+    -   date
+    -   author
+    -   committer
+    -   commit message which should briefly explain the change(s) made after previous commit
+    -   list of parents (can be more than one or even zero)
 
-    -   Snapshot of the state of project when the given (set of) change(s) was introduced together with metadata
-        -   date
-        -   author
-        -   committer
-        -   commit message which should briefly explain the change(s) made after previous commit
-        -   list of parents (can be more than one or even zero)
+### A git repository (or just repo)
 
-2.  A git repository (or just repo)
+-   Simply a list of commits
+-   Represented by a DAG: Direct Acyclic Graph
+-   Let A...F be commits, the DAG could then be e.g.
 
-    -   Simply a list of commits
-    -   Represented by a DAG: Direct Acyclic Graph
-    -   Let A...F be commits, the DAG could then be e.g.
+![](images/git_dag_1.png)
 
-    ![](images/git_dag_1.png)
+### A branch
 
-3.  A branch
+-   a separate (independent) line of development in the same repo
+-   technically, branch is just a nickname for a commit which gets moved to new commits as they are made
+-   the `master` branch always exists; our example repo also has a branch called `mybranch`
+-   current branch has a special pointer `HEAD` pointing to it (usually to the newest commit)
+-   any commit can have a *tag* permanently attached to it
+    -   often released versions of code would have a tag
+    -   or the version used for a particular article
+-   git also remembers the state of the branch on a remote (another distributed copy of the project)
 
-    -   a separate (independent) line of development in the same repo
-    -   technically, branch is just a nickname for a commit which gets moved to new commits as they are made
-    -   the `master` branch always exists; our example repo also has a branch called `mybranch`
-    -   current branch has a special pointer `HEAD` pointing to it (usually to the newest commit)
-    -   any commit can have a *tag* permanently attached to it
-        -   often released versions of code would have a tag
-        -   or the version used for a particular article
-    -   git also remembers the state of the branch on a remote (another distributed copy of the project)
+![](images/git_dag_2.png)
 
-    ![](images/git_dag_2.png)
+### Specifying a particular commit
 
-4.  Specifying a particular commit
+-   `HEAD` means the current commit on the current branch (usually the chronologically latest)
+-   a string like `92db05f2a784fe0a715de29fc97172eac6bb5089` is an sha1 hash of a commit, supposedly unique
+-   name of a branch (master, mybranch, ...)
+-   a tag, like `v0.1`
+-   `rev^` refers to the parent of `rev`, `rev^1`, `rev^2` etc refer to next parents
+-   `rev~n` refers to the nth ancestor of `rev`
+-   in the diagram, we've now hidden some of the labels which still exist
 
-    -   `HEAD` means the current commit on the current branch (usually the chronologically latest)
-    -   a string like `92db05f2a784fe0a715de29fc97172eac6bb5089` is an sha1 hash of a commit, supposedly unique
-    -   name of a branch (master, mybranch, ...)
-    -   a tag, like `v0.1`
-    -   `rev^` refers to the parent of `rev`, `rev^1`, `rev^2` etc refer to next parents
-    -   `rev~n` refers to the nth ancestor of `rev`
-    -   in the diagram, we've now hidden some of the labels which still exist
+![](images/git_dag_3.png)
 
-    ![](images/git_dag_3.png)
+### Specifying Ranges of Commits
 
-5.  Specifying Ranges of Commits
-
-    -   `rev` means all ancestors of `rev`
-    -   `--all` means all
-    -   `rev1..rev2` means commits reachable from `rev2` but not from `rev1`
-        -   in our diagram `D..F` would mean just `C`
-    -   `rev1..` is a short for `rev1..HEAD`, i.e. from current commit all the way to `rev1` but not further
+-   `rev` means all ancestors of `rev`
+-   `--all` means all
+-   `rev1..rev2` means commits reachable from `rev2` but not from `rev1`
+    -   in our diagram `D..F` would mean just `C`
+-   `rev1..` is a short for `rev1..HEAD`, i.e. from current commit all the way to `rev1` but not further
 
 ### Merge
 
@@ -180,7 +178,8 @@ git merge --no-edit AnotherB
 
 -   this is the final state of the repo
 
-### Working with remote repositories
+Working with remote repositories
+--------------------------------
 
 -   in "git" the word "remote" means "not in this directory"
     -   typically "remote" is "in the cloud"
@@ -197,7 +196,8 @@ git merge --no-edit AnotherB
         -   the latter method requires direct access to each other's local repos, which is often hard to arrange
         -   a third method involves sending patches, but don't go that route
 
-### A Clone
+A Clone
+-------
 
 -   unless you are the person setting up the repo with \`git init\`, the first thing to do is usually to *clone* an existing repo:
 
@@ -319,7 +319,8 @@ git pull
 -   and everything is up to date and all collaborators are happy
 -   there is `git merge --abort` when you unexpectedly landed in a conflicted state and don't know what to do
 
-### Conflicts
+Conflicts
+---------
 
 -   this is a bit too wide a topic to deal with here
 -   and often involves peer-to-peer interaction to sort out whose changes are the right ones
@@ -327,49 +328,50 @@ git pull
     1.  make sure no &lt; &lt; &lt; &lt; &lt; &lt; &lt;, = = = = = = =, or &gt; &gt; &gt; &gt; &gt; &gt; &gt; remain in the file you want to commit
     2.  commit it
 
-1.  *Evil Merge*
+### *Evil Merge*
 
-    -   sometimes a merge will succeed without conflicts but **the contents are wrong**: an evil merge gives no warning that something might be amiss
-        -   for example, suppose you are developing a code which needs to calculate $1-\\frac{1}{2}x^2+\\frac{1}{24}x^4$ a lot
-            -   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
-            -   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
-            -   after a successful, non-conflicted merge, your results will not be what you expected!
-        -   *Evil Merge* changed your results or even broke your program but caused no conflicts
-        -   can also happen with conflicts when the evil bit is not the conflicting one
-        -   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
-        -   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
+-   sometimes a merge will succeed without conflicts but **the contents are wrong**: an evil merge gives no warning that something might be amiss
+    -   for example, suppose you are developing a code which needs to calculate $1-\\frac{1}{2}x^2+\\frac{1}{24}x^4$ a lot
+        -   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
+        -   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
+        -   after a successful, non-conflicted merge, your results will not be what you expected!
+    -   *Evil Merge* changed your results or even broke your program but caused no conflicts
+    -   can also happen with conflicts when the evil bit is not the conflicting one
+    -   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
+    -   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
 
-### Exercises
+Exercises
+---------
 
 -   please clone the playground
     -   if you have a github account with ssh keypair set up, use `git clone git@github.com:juhaj/playground.git`
     -   if you don't, use `git clone https://github.com/juhaj/playground.git`
 
-1.  Add yourself to `AUTHORS`
+### Add yourself to `AUTHORS`
 
-    -   You have just joined the project, so you need to add yourself to the AUTHORS file
-    -   the project has a policy that each author is on a separate line
-        -   if we're lucky, this avoids conflicts as everyone does this about the same time
-    -   commit with a sensible commit message
-    -   push
+-   You have just joined the project, so you need to add yourself to the AUTHORS file
+-   the project has a policy that each author is on a separate line
+    -   if we're lucky, this avoids conflicts as everyone does this about the same time
+-   commit with a sensible commit message
+-   push
 
-2.  Update `README`
+### Update `README`
 
-    -   the `README` file mentions the number of authors the project has
-    -   update it to reflect current status
-    -   note that the number may be wrong by more than one!
-        -   someone else might have forgotten to update it
-        -   someone else might have updated and pushed `AUTHORS` already, but not yet `README`
-    -   remember the commit message again when you commit
-    -   be prepared for conflicts and try to push
-        -   since we have many people working on this at the same time, you may get a conflict
-        -   so better follow the above procedure if push fails
+-   the `README` file mentions the number of authors the project has
+-   update it to reflect current status
+-   note that the number may be wrong by more than one!
+    -   someone else might have forgotten to update it
+    -   someone else might have updated and pushed `AUTHORS` already, but not yet `README`
+-   remember the commit message again when you commit
+-   be prepared for conflicts and try to push
+    -   since we have many people working on this at the same time, you may get a conflict
+    -   so better follow the above procedure if push fails
 
-3.  Update `Changelog`
+### Update `Changelog`
 
-    -   typically projects have changelogs which have a static format but if it is not obvious what it should be here, don't worry, just add a list of changes, time, date, your email etc in it
-    -   add and commit with a sensible message
-    -   push and watch the conflicts with joy
+-   typically projects have changelogs which have a static format but if it is not obvious what it should be here, don't worry, just add a list of changes, time, date, your email etc in it
+-   add and commit with a sensible message
+-   push and watch the conflicts with joy
 
 Code Modularity
 ---------------
