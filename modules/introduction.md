@@ -6,8 +6,10 @@ Getting the Course Material
 
 -   all the course material is available in a git repository — naturally
 -   clone the repo with
-    -   `git clone git@github.com:juhaj/damtp-research-programming.git` (if you have ssh-keys on github)
-    -   `git clone https://github.com/juhaj/damtp-research-programming.git` (if you don't)
+    -   `git clone git@github.com:juhaj/material-research-programming.git` (if you have ssh-keys on github)
+    -   `git clone https://github.com/juhaj/material-research-programming.git` (if you don't)
+-   change to the directory where you placed the clone
+    -   if you used the defaults, do `cd damtp-research-programming`
 -   some instructions on using the course repo
     -   after cloning, make your own branch: `git branch mybranch`
     -   check it out: `git checkout mybranch`

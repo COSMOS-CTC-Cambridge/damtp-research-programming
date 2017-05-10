@@ -3,6 +3,22 @@ python
 
 This is mostly based on the official [python tutorial](https://docs.python.org/3/tutorial/): reading the tutorial is highly recommended to make sure your python is up to speed.
 
+Jupyter
+-------
+
+-   Some of you may have noticed I am using *jupyter* to display the notes. It is also available on the Maths desktops using the following commands
+-   load the module environment for the course
+    -   `export MODULEPATH=/alt/applic/modules/modulefiles-easybuild/all`
+-   load the relevant modules:
+    -   `module load petsc4py IPython`
+-   go to the directory where your copy of the course repository sits
+-   `jupyter notebook --no-browser`
+-   note
+    -   you need to punch a hole in the firewall between CATAM and Maths if you want to use a browser on the CATAM machine to access this
+    -   if you remove `--no-browser` from the command, it will try to send a browser window from Maths to CATAM
+        -   it may work but even if it does, it may be unusably slow
+    -   sorry about that, a better solution is in the works
+
 Data Structures: lists, tuples, dicts
 -------------------------------------
 
