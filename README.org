@@ -13,7 +13,7 @@ https://www.github.com/ if you don't have an account yet.
 
 * Getting the Course Material
 - all the course material is available in a git repository — naturally
-- the repo to clone is https://github.com/juhaj/material-research-programming
+- the repo to clone is https://github.com/juhaj/damtp-research-programming
 - some instructions on using the course repo
   - after cloning, make your own branch: =git branch mybranch=
   - check it out: =git checkout mybranch=
