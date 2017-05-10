@@ -6,6 +6,7 @@ ORGFILES=course.org plans.org slides.org todo.org \
 	modules/mpi.org \
 	modules/optimisation.org \
 	modules/practices.org \
+	modules/practices2.org \
 	modules/prototyping.org \
 	modules/python.org \
 	modules/requirements_for_environment.org \
@@ -14,6 +15,7 @@ ORGFILES=course.org plans.org slides.org todo.org \
 	modules/start.org
 MDFILES_ALL=modules/introduction.md \
 	modules/practices.md \
+	modules/practices2.md \
 	modules/python.md \
 	modules/algorithms.md \
 	modules/mpi.md \
@@ -26,6 +28,7 @@ MDFILES_ALL=modules/introduction.md \
 	modules/debugging.md 
 MDFILES=modules/introduction.md \
 	modules/practices.md \
+	modules/practices2.md \
 	modules/python.md
 SRCFILES=codes/python/distributed_computing_interactive.py codes/python/ipyparallel_and_mathematica.py codes/python/mixed_mode_mapreduce.py codes/python/mpi_hello_world.py codes/python/profile_example.py codes/python/debugging_pdb.py codes/python/debugging_simple.py codes/python/debugging_threads.py codes/cpp/c_segfaults1.c codes/cpp/c_segfaults2.c codes/cpp/subdir0/input.dat codes/cpp/subdir1/input.dat codes/python/nl_poisson_snes.py codes/python/poisson_ksp.py codes/python/poisson_snes.py codes/python/max_grad_petsc.py codes/python/distributed_computing_batch.py codes/python/distributed_computing_universal.py codes/python/distributed_computing_worker.py codes/python/mpi_hello_world_worst.py codes/python/ImportMyModule.py codes/python/MyModule.py codes/python/Game_of_Life.py codes/python/fibonacci_exercise.py codes/python/random_walker_exercise.py
 PDFFILES=

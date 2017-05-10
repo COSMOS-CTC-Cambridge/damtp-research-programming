@@ -456,7 +456,7 @@ subprocess.Popen(["python", "codes/python/ImportMyModule.py"]).wait()
 import os
 import sys
 print("Current working directory is "+os.getcwd())
-sys.path = ["codes/python"] + sys.path
+sys.path = [os.path.join(os.getcwd(),"../codes/python")] + sys.path
 import MyModule
 print("The variable MyModule.module_internal_variable has the value "+str(MyModule.module_internal_variable))
 ```
