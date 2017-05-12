@@ -347,13 +347,24 @@ git pull
     -   if you have a github account with ssh keypair set up, use `git clone git@github.com:juhaj/playground.git`
     -   if you don't, use `git clone https://github.com/juhaj/playground.git`
 
+#### Comments about the exercises
+
+1.  Save yourself from unnecessary trouble and add, commit, and push each file and change separately
+2.  Carefully read strange messages from `git`: it may complain about changed defaults, about unset email settings and such, but these have no effect on the actual operation so can be ignored here
+3.  You can use `git status` and `git show remote origin` to see what your and remote repos look like before you try yo push
+4.  Whenever `git` refuses the changes you push to the remote repo it means you need to fetch and merge first
+5.  When you have a conflict, you need to open the file in an editor, edit the contents so that they are "correct": there is no algorithm, this is where you talk to your collaborators and use human decision making skills to decide the correct content
+6.  When your file has the desired content, you `git add FILE` to tell `git` you have resolved the conflict and then `git commit --message=something` to commit your changes (the resolved conflicting merge)
+7.  Try to push again, but someone might have beaten you to it!
+
 #### Add yourself to `AUTHORS`
 
 -   You have just joined the project, so you need to add yourself to the AUTHORS file
 -   the project has a policy that each author is on a separate line
     -   if we're lucky, this avoids conflicts as everyone does this about the same time
--   commit with a sensible commit message
--   push
+-   remember always to `git add` your edited file
+-   now `git commit` with a sensible commit message
+-   and `git push`
 
 #### Update `README`
 

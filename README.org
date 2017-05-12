@@ -28,3 +28,21 @@ https://www.github.com/ if you don't have an account yet.
   - note:
     - you do not have write access to the github repo so you cannot push
     - but you cannot screw up anything else than your local copy either so safe to play around if you wish
+
+* Licence
+
+These lectures are (c) by Juha Jäykkä <juhaj+github@iki.fi>
+
+All the programs are licensed under a 
+
+GNU General Public License version 3
+
+You should have received a copy of the GNU General Public License along with the programs. If not, see
+<http://www.gnu.org/licenses/gpl-3.0.en.html>.
+
+The lecture notes are licensed under a
+
+Creative Commons Attribution-ShareAlike 4.0 International License.
+
+You should have received a copy of the license along with this
+work. If not, see <http://creativecommons.org/licenses/by-sa/4.0/>.
