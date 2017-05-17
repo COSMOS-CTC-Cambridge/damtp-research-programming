@@ -29,7 +29,8 @@ MDFILES_ALL=modules/introduction.md \
 MDFILES=modules/introduction.md \
 	modules/practices.md \
 	modules/practices2.md \
-	modules/python.md
+	modules/python.md \
+	modules/algorithms.md
 SRCFILES=codes/python/distributed_computing_interactive.py codes/python/ipyparallel_and_mathematica.py codes/python/mixed_mode_mapreduce.py codes/python/mpi_hello_world.py codes/python/profile_example.py codes/python/debugging_pdb.py codes/python/debugging_simple.py codes/python/debugging_threads.py codes/cpp/c_segfaults1.c codes/cpp/c_segfaults2.c codes/cpp/subdir0/input.dat codes/cpp/subdir1/input.dat codes/python/nl_poisson_snes.py codes/python/poisson_ksp.py codes/python/poisson_snes.py codes/python/max_grad_petsc.py codes/python/distributed_computing_batch.py codes/python/distributed_computing_universal.py codes/python/distributed_computing_worker.py codes/python/mpi_hello_world_worst.py codes/python/ImportMyModule.py codes/python/MyModule.py codes/python/Game_of_Life.py codes/python/fibonacci_exercise.py codes/python/random_walker_exercise.py
 PDFFILES=
 PNGFILES=modules/images/boundary_conditions.png modules/images/ghosts.png modules/images/MPI_subarray.png modules/images/git_dag_1.png modules/images/git_dag_2.png modules/images/git_dag_3.png modules/images/git_dag_4.png modules/images/git_dag_5.png modules/images/git_dag_6.png modules/images/git_dag_7.png modules/images/git_dag_8.png modules/images/git_dag_9.png  modules/images/domain_decomp_strong_scaling.png modules/images/python_package_structure.png
