@@ -30,4 +30,4 @@ def greduce(localval):
 if ("__main__" == __name__):
     result = greduce(lmap(get_data()))
     if (MPI.COMM_WORLD.Get_rank() == 0):
-        print result
+        print(result)

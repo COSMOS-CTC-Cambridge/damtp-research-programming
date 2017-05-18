@@ -2,7 +2,8 @@
 This course is ran in the Department of Theoretical Physics and Applied Mathematics in the University of
 Cambridge. To run and do the exercises, you need access to a desktop/server at either DAMTP or DPMMS or a
 computer system with =petsc4py=, =ipyparallel=, parallel =hdf5=, =matplotlib=, an OpenMP compiler and runtime,
-=MPI=, and of course =git=. The DAMTP and DPMMS desktops and servers have all of these.
+=MPI=, and of course =git=. The DAMTP and DPMMS desktops and servers have all of these: instructions on how to
+access them can be found in the python nodes in =modules= directory.
 
 Some familiarity with the unix shell is also necessary.
 

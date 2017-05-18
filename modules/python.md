@@ -10,7 +10,7 @@ Jupyter
 -   load the module environment for the course
     -   `export MODULEPATH=/alt/applic/modules/modulefiles-easybuild/all`
 -   load the relevant modules:
-    -   `module load petsc4py IPython`
+    -   `module load petsc4py IPython ipyparallel`
 -   go to the directory where your copy of the course repository sits
 -   `jupyter notebook --no-browser`
 -   note

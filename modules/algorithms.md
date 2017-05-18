@@ -18,7 +18,7 @@ Difficult and Big Problems: Think Parallel
     -   This performance provided by the SIMD capabilities of vector processing unit(s) (*VPU*)
         -   GPU and FPGA co-processors offer similar functionality
 
-### Second level of parallelism:/multicore/ and *manycore*
+### Second level of parallelism: *multicore* and *manycore*
 
 -   Gives another **10x** or so over 2005 performance
     -   Xeon Phi gives **30x**
