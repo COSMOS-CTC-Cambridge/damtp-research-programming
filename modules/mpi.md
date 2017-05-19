@@ -154,9 +154,13 @@ then
     cat >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py << EOF 
 c.BaseParallelApplication.cluster_id = 'training_cluster_0'
 EOF
-ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True
 fi
-#+BEGIN_SRC python :tangle yes :tangle "../codes/python/ipyparallel_and_mathematica.py"
+ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True
+```
+
+and
+
+``` python
 import ipyparallel
 c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
 ```
