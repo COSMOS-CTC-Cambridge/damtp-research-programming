@@ -155,7 +155,7 @@ then
 c.BaseParallelApplication.cluster_id = 'training_cluster_0'
 EOF
 fi
-ipcluster start -n 4 --engines=MPI --profile=mpi --work-dir=${REPO_ROOT} --cluster-id=training_cluster_0 --daemon=True
+ipcluster start -n 4 --engines=MPI --profile=mpi --cluster-id=training_cluster_0 --daemon=True
 ```
 
 and
