@@ -627,7 +627,7 @@ class ghost_data(object):
               subarray starts, in coordinates of the full local array
 
         '''
-        self.mx,self.my,self.mz = sizes
+        self.mz,self.my,self.mx = sizes
         self.types = {}
         self.axes = {}
         for axis in ["X", "Y", "Z"]:
@@ -645,11 +645,11 @@ class ghost_data(object):
                         "dest": topology.shifts[axis][movement],
                         "source": topology.shifts[axis][negmovement]}
     def axis2basisvec(self, axis):
-        return numpy.array([axis == "X", axis == "Y", axis == "Z"],
+        return numpy.array([axis == "Z", axis == "Y", axis == "X"],
                            dtype=numpy.float64)
     def get_plaq(self, axis):
         vec = self.axis2basisvec(axis)
-        pl = [self.mx, self.my, self.mz]*(1-vec)+vec
+        pl = [self.mz, self.my, self.mx]*(1-vec)+vec
         return list(pl)
     def get_corner(self, axis, sendrecv, movement):
         vec = self.axis2basisvec(axis)
@@ -750,10 +750,10 @@ def initialise_values(me, topo):
     procsalong, periods, mycoord = topo.topology.Get_topo()
     mycorner = mycoord*(numpy.array(me.localsizes)-2)
     sz, sy, sx = numpy.array(me.localsizes)-2
-    for z in xrange(sz):
-        for y in xrange(sy):
-            start = (mycorner[0] + sx*(y+mycorner[1])*procsalong[0] +
-                     sy*sx*(z+mycorner[2])*procsalong[1]*procsalong[0])
+    for z in range(sz):
+        for y in range(sy):
+            start = (mycorner[2] + sx*(y+mycorner[1])*procsalong[2] +
+                     sy*sx*(z+mycorner[0])*procsalong[2]*procsalong[1])
             stop = start + sx
             local_array[z+1,y+1,1:-1] = numpy.arange(start,
                                                      stop, step=1)**2
@@ -837,7 +837,7 @@ directview["find_global_max"]=find_global_max
 -   before main code, we define a rudimentary correctness testing routine: it knows the expected correct answers up to 4 ranks and could easily be expanded to calculate the expected result from an analytic expression
 
 ``` python
-def testme(maxgrad, topology):
+def testme(maxgrad, topology, localsizes):
     '''Test if we get the correct result.
 
     Parameters
@@ -852,8 +852,12 @@ def testme(maxgrad, topology):
     '''
     size=topology.topology.Get_size()
     rank=topology.topology.Get_rank()
-    expected=[1650.0,7632.0,13032.0,32119.5]
-    return maxgrad == expected[size-1]
+    procsalong, periods, mycoord = cartesian_topology.topology.Get_topo()
+    nz,ny,nx = procsalong
+    sz,sy,sx = (numpy.array(localsizes)-2)*numpy.array([nz,ny,nx])
+    maximum = 2*sx*sy*(-1+sx*sy*(sz-1))
+    expected=maximum
+    return maxgrad == expected
 directview["testme"]=testme
 ```
 
@@ -889,7 +893,7 @@ def main():
             maxgrad_g=result_g),
         cartesian_topology.topology)
     if (me.rank == 0):
-        if (testme(result_g, cartesian_topology)):
+        if (testme(result_g, cartesian_topology, me.localsizes)):
             print("Result is correct.")
         else:
             print("Result is incorrect!")

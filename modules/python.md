@@ -128,7 +128,24 @@ array = numpy.arange(0,27)
 array
 ```
 
-but now we give it a new shape
+Python can give you a nasty surprise sometimes. For mutable objects, like lists and numpy arrays, assignments do not create copies:
+
+``` python
+mutable1 = numpy.linspace(0,5,6)
+mutable2 = mutable1
+mutable3 = mutable1.copy()
+mutable1[0]=-1
+print("But now mutable1 = {} and mutable2 = {}!".format(mutable1, mutable2))
+print("You have to .copy() to get mutable3 = {}.".format(mutable3))
+```
+
+This helps avoid extra memory copies and allocations, but can sometimes give a nasty surprise. Surprising memory allocations will still sometimes happen, e.g.
+
+``` python
+mutable3[:] = mutable1 + mutable2
+```
+
+Let's now give \\verb{array} a new shape
 
 ``` python
 array=array.reshape(3,3,3)
