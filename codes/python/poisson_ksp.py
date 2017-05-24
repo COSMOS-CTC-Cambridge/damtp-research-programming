@@ -36,6 +36,7 @@ ssize = 1
 bx    = PETSc.DMDA.BoundaryType.GHOSTED
 by    = PETSc.DMDA.BoundaryType.GHOSTED
 bz    = PETSc.DMDA.BoundaryType.GHOSTED
+comm = PETSc.COMM_WORLD
 OptDB = PETSc.Options() #get PETSc option DB
 m = OptDB.getInt('m', PETSc.DECIDE)
 n = OptDB.getInt('n', PETSc.DECIDE)

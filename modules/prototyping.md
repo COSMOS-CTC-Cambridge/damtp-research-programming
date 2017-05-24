@@ -157,7 +157,7 @@ if PETSc.COMM_WORLD.rank == 0:
 
 ### Exercise
 
-1.  The previous code is available in the `codes/python` directory: go and try to run it with `mpirun -np 4` to double check the result is the same.
+1.  The previous code is available `../codes/python/max_grad_petsc.py`: go and try to run it with `mpirun -np 4` to double check the result is the same.
 2.  Write unit tests for at least initialisation and final result.
 3.  The code is buggy: what happens if you try to run with 7 ranks? Why? Can this be fixed? How/why?
 
@@ -198,6 +198,7 @@ ssize = 1
 bx    = PETSc.DMDA.BoundaryType.GHOSTED
 by    = PETSc.DMDA.BoundaryType.GHOSTED
 bz    = PETSc.DMDA.BoundaryType.GHOSTED
+comm = PETSc.COMM_WORLD
 OptDB = PETSc.Options() #get PETSc option DB
 m = OptDB.getInt('m', PETSc.DECIDE)
 n = OptDB.getInt('n', PETSc.DECIDE)
@@ -767,7 +768,8 @@ Time Stepping
 
 -   Write a code using `PETSc.TS` to simulate
 
-$$
-\\nabla^2 f(x) - g(x) f(x)^2 = \\frac{d}{dt} f(x)
-$$
+
+$$\begin{equation}
+\nabla^2 f(x) - g(x) f(x)^2 = \frac{d}{dt} f(x)
+\end{equation}$$
 
