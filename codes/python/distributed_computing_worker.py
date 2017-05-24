@@ -341,7 +341,7 @@ def testme(maxgrad, topology, localsizes):
     '''
     size=topology.topology.Get_size()
     rank=topology.topology.Get_rank()
-    procsalong, periods, mycoord = cartesian_topology.topology.Get_topo()
+    procsalong, periods, mycoord = topology.topology.Get_topo()
     nz,ny,nx = procsalong
     sz,sy,sx = (numpy.array(localsizes)-2)*numpy.array([nz,ny,nx])
     maximum = 2*sx*sy*(-1+sx*sy*(sz-1))
