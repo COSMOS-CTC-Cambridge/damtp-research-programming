@@ -13,12 +13,15 @@ def frame_generator(iteration, state, fig, ax, state_updater):
     axesimage = ax.imshow(state)
     return [axesimage]
 
-def animate_game(size=(100,100)):
+def animate_game(state_initialiser, state_updater, **kwargs):
     fig = matplotlib.pyplot.figure()
-    ax = fig.add_subplot(111)
-    state = Game_of_Life.initial(size)
-    ani = matplotlib.animation.FuncAnimation(fig, frame_generator, fargs=(state, fig, ax, Game_of_Life.step),
-                                             blit=False, interval=10, frames=10,
-                                             repeat=True)
-    matplotlib.pyplot.show()
-    return ani
+    state = state_initialiser(**kwargs)
+    while True:
+        matplotlib.pyplot.imshow(state)
+        #plt.show()
+        matplotlib.pyplot.pause(.1)
+        matplotlib.pyplot.draw()    
+        matplotlib.pyplot.clf()
+        state = state_updater(state)
+
+animate_game(state_initialiser=Game_of_Life.initial, state_updater=Game_of_Life.step, size=(10,10))

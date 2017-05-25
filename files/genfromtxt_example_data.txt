@@ -1,0 +1,8 @@
+# This file contains a bunch of point particles of varying locationg, speeds, 
+# masses and charges
+X	Y	Z	Vx	Vy	Vz	mass	charge
+0	0	0	0	0	0.1	100.0	0.0
+1.0	0	4	0	10.0	0	10.0	-1.0
+0	2	0	0.1	0	0.1	1000.0	0.0
+2	2	-3	0.1	0	0.1	100.0	1.0
+# A comment line

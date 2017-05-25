@@ -4,7 +4,8 @@ import time
 import datetime
 import matplotlib
 import matplotlib.pyplot
-import matplotlib.animation
+import scipy
+import scipy.signal
 
 def initial(size=(5,5)):
     '''Initialise the Game of Life to a random state.
@@ -30,37 +31,12 @@ def step(cells):
            [0, 0, 0, 0, 0, 0, 1],
            [0, 0, 0, 0, 0, 0, 0]])
     '''
-    newcells = numpy.copy(cells)
-    maxx, maxy = cells.shape[0], cells.shape[1]
-    for jj in range(maxy):
-        for ii in range(maxx):
-            # rule 5 is accounted for by the modulo operators
-            # for parallel code MODULO IS EVIL
-            living_neighbours = (cells[(ii+1)%maxx,(jj+1)%maxy] +
-                                 cells[(ii+1)%maxx,(jj+0)%maxy] +
-                                 cells[(ii+1)%maxx,(jj-1)%maxy] +
-                                 cells[(ii+0)%maxx,(jj+1)%maxy] +
-                                 cells[(ii+0)%maxx,(jj-1)%maxy] +
-                                 cells[(ii-1)%maxx,(jj+1)%maxy] +
-                                 cells[(ii-1)%maxx,(jj+0)%maxy] +
-                                 cells[(ii-1)%maxx,(jj-1)%maxy]
-                                 )
-            if (cells[ii,jj] == 1):
-                # this is a living cell
-                if (living_neighbours < 2):
-                    # rule 1
-                    newcells[ii,jj] = 0
-                elif (living_neighbours > 3):
-                    # rule 3
-                    newcells[ii,jj] = 0
-                else:
-                    # rule 2 is a no-op: we are already alive
-                    pass
-            else:
-                # this is a dead cell
-                if (living_neighbours == 3):
-                    # rule 4
-                    newcells[ii,jj] = 1
+    convolvemask = numpy.ones((3,3), dtype=numpy.int)
+    convolvemask[1,1] = 0
+    Nlive = scipy.signal.convolve2d(cells,convolvemask, mode='same', boundary="wrap")
+    newcells = numpy.where(cells==1,
+                           numpy.where(Nlive<2,0,numpy.where(Nlive>3,0,1)),
+                           numpy.where(Nlive==3,1,0))
     return newcells
 
 def run_game(size=(5,5)):
