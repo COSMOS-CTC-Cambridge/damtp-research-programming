@@ -1,9 +1,12 @@
-
 import numpy
 import tempfile
 import h5py
-file=tempfile.NamedTemporaryFile(dir="../codes/python/", prefix="hdf5_visualisation_example", suffix=".h5",
-                                 delete=False)
+import os
+file=tempfile.NamedTemporaryFile(
+    dir=os.path.join("..","files"),
+    prefix="hdf5_visualisation_example",
+    suffix=".h5",
+    delete=False)
 file.close()
 xmin, xmax, ymin, ymax, zmin, zmax = -5,+5,-5,+5,-5,+5
 xpts, ypts, zpts = 101, 101, 101
@@ -16,26 +19,8 @@ mydata[r<cutoff2] = r[r<cutoff2]
 mydata[r<cutoff1] = 0.0
 mydata[r>cutoff3] = 0.0
 h5file = h5py.File(file.name,"w")
-try:
-    h5file.create_dataset(dsname, data=mydata) #, compression="szip")
-except ValueError as ve:
-    if (ve.args[0] == 'Compression filter "szip" is unavailable'):
-        try:
-            h5file.create_dataset(dsname, data=mydata, compression="lzf")
-        except ValueError as ve:
-            if (ve.args[0] == 'Compression filter "lzf" is unavailable'):
-                try:
-                    h5file.create_dataset(dsname, data=mydata, compression="gzip")
-                except ValueError as ve:
-                    if (ve.args[0] == 'Compression filter "gzip" is unavailable'):
-                        h5file.create_dataset(dsname, data=mydata)
-                    else:
-                        raise
-            else:
-                raise
-    else:
-        raise
-print("Wrote data to file {f} using compression type {comp}.".format(f=file.name, comp=h5file[dsname].compression))
+h5file.create_dataset(dsname, data=mydata)
+print("Wrote data to file {f}.".format(f=file.name))
 
 str="""<?xml version="1.0" ?>
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
@@ -52,7 +37,8 @@ str="""<?xml version="1.0" ?>
         </DataItem>
       </Geometry>
       <Attribute Name="mydata" AttributeType="Scalar" Center="Node">
-        <DataItem Dimensions="{Nx} {Ny} {Nz}" NumberType="Float" Precision="{precision}" Format="HDF">
+        <DataItem Dimensions="{Nx} {Ny} {Nz}" NumberType="Float"
+         Precision="{precision}" Format="HDF">
           {filename}:/{datasetname}
         </DataItem>
       </Attribute>
@@ -60,9 +46,11 @@ str="""<?xml version="1.0" ?>
   </Domain>
 </Xdmf>
 """.format(meshname="mymesh",
-           Nx=h5file[dsname].shape[0], Ny=h5file[dsname].shape[1], Nz=h5file[dsname].shape[2],
+           Nx=h5file[dsname].shape[0], Ny=h5file[dsname].shape[1],
+           Nz=h5file[dsname].shape[2],
            xmin=xmin, ymin=ymin, zmin=zmin,
-           dx=(xmax-xmin)*1.0/(xpts-1), dy=(ymax-ymin)*1.0/(ypts-1), dz=(zmax-zmin)*1.0/(zpts-1),
+           dx=(xmax-xmin)*1.0/(xpts-1), dy=(ymax-ymin)*1.0/(ypts-1),
+           dz=(zmax-zmin)*1.0/(zpts-1),
            precision=h5file[dsname].dtype.itemsize,
            filename=h5file.filename,
            datasetname=dsname)
