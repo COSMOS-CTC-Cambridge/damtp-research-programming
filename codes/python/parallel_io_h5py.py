@@ -6,6 +6,8 @@ import os
 import array
 if (MPI.COMM_WORLD.rank == 0):
     temp="hdf5_visualisation_example.h5"
+else:
+    temp=""
 KEEP_ME_AROUND=MPI.COMM_WORLD.bcast(temp, root=0)
 rank = MPI.COMM_WORLD.rank
 print(KEEP_ME_AROUND)
