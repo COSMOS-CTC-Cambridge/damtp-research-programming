@@ -299,12 +299,12 @@ print(oufile, end="")
         -   but unless you use matplotlib-frontend specific, just using file-write backend directly, without plotting on screen is much faster
         -   in both cases you can convert to video like
 
-            ``` example
-            ffmpeg -f image2 -pattern_type glob -framerate 25 -i\
-             'testanimationsaveframe_*.png' -s 800x600 foo.mkv
-            ```
+``` example
+ffmpeg -f image2 -pattern_type glob -framerate 25 -i\
+ 'testanimationsaveframe_*.png' -s 800x600 foo.mkv
+```
 
-    -   or illustrate how an algorithm works, see exercises!
+-   or illustrate how an algorithm works, see exercises!
 -   here's an example with all the important bits:
 
 ``` python
