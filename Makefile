@@ -25,6 +25,7 @@ MDFILES_ALL=modules/introduction.md \
 	modules/optimisation.md \
 	modules/requirements_for_environment.md \
 	modules/shell.md \
+	modules/sshetal.md \
 	modules/unfinished.md \
 	modules/debugging.md 
 MDFILES=modules/introduction.md \
