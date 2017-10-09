@@ -39,3 +39,5 @@ Exercises
     2.  Run `my_jupyter` in that shell: this will reserve this shell, if you want to explore the machine using shell, open another `ssh` connection using another terminal.
         1.  Advanced tip: or use output redirection and backgrounding to keep using this shell, but read next task first.
 
+    3.  Read the message printed by `jupyter`: it asks you to "login with a token". Copy that URL to your browser, but replace `localhost` with `slurmcluster01.westeurope.cloudapp.azure.com`.
+
