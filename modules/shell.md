@@ -72,7 +72,7 @@ echo example*
 echo examplefile[0-8]
 ```
 
--   Do yourself a favour and avoid "special" characters in filenames: TODO!!! `` ()[]{} &*$?\|#'"` ``
+-   Do yourself a favour and avoid "special" characters in filenames: `` ()[]{} &*$?\|#'"` ``
 -   Yes, that is a space in there!
 -   All of these work if you *escape* them correctly, but it is complicated:
 
@@ -308,7 +308,7 @@ Shell, part 4: Permissions, Processes, and the Environment
 ls -la
 ```
 
--   Careful! Prmissions on directory control new file creation and deletion, so can "steal" files! (Just demonstrating the sequence, the original file is already owned by the training user.)
+-   Careful! Permissions on directory control new file creation and deletion, so can "steal" files! (Just demonstrating the sequence, the original file is already owned by the training user.)
 
 ``` bash
 mv examplefile3 3elifelpmaxe
@@ -318,12 +318,12 @@ rm 3elifelpmaxe
 
 -   For shared directories, use `getfacl` and `setfacl` but they have limitations: only files originally created in the directory inherit the ACL, files moved there from elsewhere will need further action.
 -   ACLs are the only practical way of setting up shared directories
--   Give group `users` read access and user `z300` read-write access to `exampledirectory3` and make sure subsequent files and directories created there have similar permissions:
+-   Give group `users` read access and current user read-write access to `exampledirectory3` and make sure subsequent files and directories created there have similar permissions:
 
 ``` bash
 setfacl --default --modify u::rw exampledirectory3
 setfacl --default --modify g::r exampledirectory3
-setfacl --modify u:z300:rw exampledirectory3
+setfacl --modify u:${USER}:rw exampledirectory3
 setfacl --modify g:users:r exampledirectory3
 ```
 
@@ -403,7 +403,6 @@ wait
 
 -   the notorius segmentation fault or segmentation violation or segfault for short causes the kernel to send the `SIGSEGV` signal to the offending process
 -   some batch job systems on supercomputers will send `SIGUSR1`, `SIGUSR2`, `SIGXCPU` or `SIGTERM` when your job is about to run out of its allocated time slot
--   COSMOS will send `SIGTERM` first, followed by `SIGKILL` if you don't quit peacefully
 
 ### Shell startup and environment
 
