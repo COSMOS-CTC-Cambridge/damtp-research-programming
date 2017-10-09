@@ -42,7 +42,7 @@ THIS NEEDS BASH KERNEL, REMEMBER TO CHANGE FROM MENU
 #### A git repository (or just repo)
 
 -   Simply a list of commits
--   Represented by a DAG: Direct Acyclic Graph
+-   Represented by a DAG: Directed Acyclic Graph
 -   Let A...F be commits, the DAG could then be e.g.
 
 ![](images/git_dag_1.png)

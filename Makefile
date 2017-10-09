@@ -11,6 +11,7 @@ ORGFILES=course.org plans.org slides.org todo.org \
 	modules/python.org \
 	modules/requirements_for_environment.org \
 	modules/shell.org \
+	modules/sshetal.org \
 	modules/unfinished.org \
 	modules/start.org
 MDFILES_ALL=modules/introduction.md \
@@ -27,8 +28,10 @@ MDFILES_ALL=modules/introduction.md \
 	modules/unfinished.md \
 	modules/debugging.md 
 MDFILES=modules/introduction.md \
-	modules/practices.md \
-	modules/practices2.md \
+	modules/shell.md \
+	modules/sshetal.md \
+	modules/practices.md
+MDFILES_to_come=modules/practices2.md \
 	modules/python.md \
 	modules/algorithms.md \
 	modules/mpi.md \

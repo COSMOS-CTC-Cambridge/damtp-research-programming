@@ -10,7 +10,7 @@ Jupyter
 -   load the module environment for the course
     -   `export MODULEPATH=/alt/applic/modules/modulefiles-easybuild/all`
 -   load the relevant modules:
-    -   `module load petsc4py IPython ipyparallel`
+    -   `module load petsc4py IPython ipyparallel matplotlib`
 -   go to the directory where your copy of the course repository sits
 -   `jupyter notebook --no-browser`
 -   note
@@ -480,7 +480,9 @@ print("The variable MyModule.module_internal_variable has the value "+str(MyModu
 
 ``` python
 import subprocess
-subprocess.Popen(["python", "codes/python/ImportMyModule.py"]).wait()
+p=subprocess.Popen(["python", "../codes/python/ImportMyModule.py"])
+if (p.wait()==0): print("Success!")
+else: print("Failed!")
 ```
 
 -   the search path is partially system dependent, but there's always `PYTHONPATH` which is searched before the system depedent path, so we can fix this
