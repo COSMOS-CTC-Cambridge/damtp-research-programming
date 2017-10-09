@@ -1,6 +1,8 @@
 Shell
 =====
 
+-   **PLEASE CHANGE THE KERNEL** to bash kernel (from the Kernel-menu)
+
 The Unix Command Line
 ---------------------
 
