@@ -32,7 +32,7 @@ Exercises
                <username>@<hostname>`
     2.  Repeat Exercise 1.
     3.  Create a file and use `rsync` to copy it to safety
-    4.  If you know how to, clone the course repo to `/data/share/<yourusername>`
+    4.  If you know how to, clone the course repo to `/share/data/<yourusername>`
 
 4.  There is a special program `my_jupyter` on the Azure host. This runs a pre-configured version of jupyter for your convenience and allows you to interact with the lecture notes.
     1.  Use `ssh` to log in to `slurmcluster01.westeurope.cloudapp.azure.com` using your account.
