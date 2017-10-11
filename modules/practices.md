@@ -351,7 +351,17 @@ a lot
 
 ### Exercises
 
--   please clone the playground
+#### Get up-to-date course notes
+
+1.  If you have not cloned the repo yet, clone it to `/share/data/<yourusername>` on the Azure host.
+    1.  Do the next part of the exercise on the next lecture, it will be pointless right now
+
+2.  In the directory you cloned the repo to, get the latest versions of the notes from the remote repo.
+    1.  If you viewed the `.md` files using jupyter, you will get conflicts due to jupyter's autosave feature.
+    2.  If you made any other changes, you may or may not get conflicts.
+    3.  Probably the best way to deal with jupyter's autosave feature is to always checkout a new local branch and only ever update master from the remote. One way to do this is explained on the [course website](https://github.com/juhaj/damtp-research-programming).
+
+3.  please clone the playground
     -   if you have a github account with ssh keypair set up, use `git clone git@github.com:juhaj/playground.git`
     -   if you don't, use `git clone https://github.com/juhaj/playground.git`
 
