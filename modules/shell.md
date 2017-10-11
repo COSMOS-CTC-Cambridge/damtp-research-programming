@@ -441,15 +441,17 @@ find exampledirectory12 -name 'example*1' -print0 |xargs -0 ls -l
 Examples / Practicals / Exercises (these go to cookbook, too)
 -------------------------------------------------------------
 
--   Remove file called `foo bar`.
--   Remove file called `-rf`.
--   Remove file called `nasty $SHELL`,
--   Remove LaTeX compilation by-products (i.e. files ending in `.log` and `.aux`) in a directory hierarchy which is 10 levels deep (hint: `find`).
--   List all executable files in the current directory, including "hidden" ones.
--   List of directories in the current directory.
--   Write a shell script which outputs "`filename` is older" if `filename` is older than your `~/.bashrc` and "`filename` is newer" it it is not older.
--   Create yourself an ssh private-public-keypair and set up key based authentication with your training account on `slurmcluster01.westeurope.cloudapp.azure.com`.
--   You should pick one and learn the tricks of at least one text-editor to make your life easier on the terminal. This course does not cover that but popular choices are `emacs` and `vim`; emacs has a good built-in tutorial which you can easily access the first time you start it.
+TODO!!! These need a pre-prepared directory!
+
+1.  Remove file called `foo bar`.
+2.  Remove file called `-rf`.
+3.  Remove file called `nasty $SHELL`,
+4.  Remove LaTeX compilation by-products (i.e. files ending in `.log` and `.aux`) in a directory hierarchy which is 10 levels deep (hint: `find`).
+5.  List all executable files in the current directory, including "hidden" ones.
+6.  List of directories in the current directory.
+7.  Write a shell script which outputs "`filename` is older" if `filename` is older than your `~/.bashrc` and "`filename` is newer" it it is not older.
+8.  Create yourself an ssh private-public-keypair and set up key based authentication with your training account on `slurmcluster01.westeurope.cloudapp.azure.com`.
+9.  You should pick one and learn the tricks of at least one text-editor to make your life easier on the terminal. This course does not cover that but popular choices are `emacs` and `vim`; emacs has a good built-in tutorial which you can easily access the first time you start it.
 
 Further resources
 -----------------

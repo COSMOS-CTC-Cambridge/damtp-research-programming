@@ -31,7 +31,7 @@ Exercises
     1.  Use them to log into `slurmcluster01.westeurope.cloudapp.azure.com`. The simplest syntax for ssh is `ssh
                <username>@<hostname>`
     2.  Repeat Exercise 1.
-    3.  Create a file and use `rsync` to copy it to safety
+    3.  Create a file and use `rsync -a <source> <destination>` to copy it to safety: you should run the command on `source` if you have a machine you can `ssh` to from anywhere in the world (like `linux.ds.cam.ac.uk`, using your CRSID as the username) or you run the command on `destination` and use the Azure host as the source. Use `rsync --help` or `man rsync` to figure out how to specify a file or directory to copy.
     4.  If you know how to, clone the course repo to `/share/data/<yourusername>`
 
 4.  There is a special program `my_jupyter` on the Azure host. This runs a pre-configured version of jupyter for your convenience and allows you to interact with the lecture notes.

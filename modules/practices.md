@@ -281,7 +281,7 @@ cd ../clone2
 ![](images/git_dag_8.png)
 
 -   the reason we cannot push is the existence of `D` in origin: if our collaborator had not pushed their commit `D` into origin, we would be able to push
-    -   and indeed turning the tables, **they** did that when they pushed
+    -   and indeed turn the tables, **they** did that when they pushed
 -   this is **not** a fast-forward merge since we both have modified file `C`
 -   the procedure is
     1.  fetch
@@ -332,14 +332,22 @@ git pull
 #### *Evil Merge*
 
 -   sometimes a merge will succeed without conflicts but **the contents are wrong**: an evil merge gives no warning that something might be amiss
-    -   for example, suppose you are developing a code which needs to calculate $1-\\frac{1}{2}x^2+\\frac{1}{24}x^4$ a lot
-        -   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
-        -   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
-        -   after a successful, non-conflicted merge, your results will not be what you expected!
-    -   *Evil Merge* changed your results or even broke your program but caused no conflicts
-    -   can also happen with conflicts when the evil bit is not the conflicting one
-    -   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
-    -   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
+    -   for example, suppose you are developing a code which needs to calculate
+
+
+$$\begin{equation}
+1-\frac{1}{2}x^2+\frac{1}{24}x^4
+\end{equation}$$
+
+a lot
+
+-   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
+-   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
+-   after a successful, non-conflicted merge, your results will not be what you expected!
+-   *Evil Merge* changed your results or even broke your program but caused no conflicts
+-   can also happen with conflicts when the evil bit is not the conflicting one
+-   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
+-   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
 
 ### Exercises
 
