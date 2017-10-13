@@ -31,7 +31,9 @@ MDFILES_ALL=modules/introduction.md \
 MDFILES=modules/introduction.md \
 	modules/shell.md \
 	modules/sshetal.md \
-	modules/practices.md
+	modules/practices.md \
+	modules/practices2.md \
+	modules/python.md
 MDFILES_to_come=modules/practices2.md \
 	modules/python.md \
 	modules/algorithms.md \
