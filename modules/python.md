@@ -316,7 +316,7 @@ print(findzeros.__doc__)
 ``` python
 import urllib
 import urllib.request
-def get_url(url='http://www.cam.ac.uk/'):
+def get_url(url='http://www.damtp.cam.ac.uk/'):
     data=[]
     with urllib.request.urlopen(url) as response:
         charset = response.headers.get_content_charset()
