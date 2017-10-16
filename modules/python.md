@@ -17,7 +17,7 @@ Jupyter
     -   you need to punch a hole in the firewall between CATAM and Maths if you want to use a browser on the CATAM machine to access this
     -   if you remove `--no-browser` from the command, it will try to send a browser window from Maths to CATAM
         -   it may work but even if it does, it may be unusably slow
-    -   if sitting at the desktop, it works fine without `--no-browser`
+    -   if sitting at the desktop, it works fine without `--no-browser` and of course there is no need to punch any holes
 
 Data Structures: lists, tuples, dicts
 -------------------------------------

@@ -6,7 +6,6 @@ Code Modularity
     -   in C/Fortran use a makefile to help compiling and linking them together
     -   in python, codes in separate files become *modules*
 -   we'll see more of this once we start coding
--   if time, we'll look at continuous integration, testing and deployment
 
 Correctness Testing
 ===================
@@ -109,10 +108,9 @@ doctest.testmod()
     -   unfortunately, no failsafe way out!
 -   again, please do get into the practice of writing tests
 
-Continuous Integration and Testing
-==================================
+Continuous Integration and Testing — a Quick Look
+=================================================
 
--   we won't have time to demonstrate this
 -   the idea is that there is some automaton somewhere, which takes each commit (or specified branch HEADs at fixed times) and
     -   compiles it if relevant
     -   runs all unit tests
@@ -121,3 +119,4 @@ Continuous Integration and Testing
     -   sometimes even deploys this into production
 -   this is quite useful and not very hard to set up
 -   in scientific computing, the last two or three steps are often impractical to implement
+-   code modularity is especially useful here: no need to compile and test all modules, only the changed ones, a bit like `make` only rebuilds changes source code files
