@@ -256,19 +256,19 @@ for i in range(0,4): print(str(i), end=", ")
 ```
 
 ``` python
-print([i for i in range(0,4)])
+print([i**2 for i in range(0,4)])
 ```
 
 ``` python
-print([str(i) for i in range(0,4)])
+print([str(i**2) for i in range(0,4)])
 ```
 
 ``` python
-for i in range(4): print(str(i), end=", ")
+for i in range(4): print(str(i**2), end=", ")
 ```
 
 ``` python
-print(','.join([str(i) for i in range(0,4)]))
+print(','.join([str(i**2) for i in range(0,4)]))
 ```
 
 -   there are others, see the [tutorial for python 3](https://docs.python.org/3/tutorial/)
@@ -450,6 +450,8 @@ Which way of doing things is better? Much? How about at 1000x1000?
 ### Random walkers
 
 Write a code where two people perform a random walk along a rectangular `10x10` grid of coordinates, stopping when the hit (occupy same coordinates) each other for the first time.
+
+What is the asymptotic mean free path for such walkers? Or, equivalently, what the expectation value of steps taken before meeting.
 
 Good Programming Practice: modularity
 -------------------------------------

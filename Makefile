@@ -33,11 +33,9 @@ MDFILES=modules/introduction.md \
 	modules/sshetal.md \
 	modules/practices.md \
 	modules/practices2.md \
-	modules/python.md
-MDFILES_to_come=modules/practices2.md \
 	modules/python.md \
-	modules/algorithms.md \
-	modules/mpi.md \
+	modules/mpi.md
+MDFILES_to_come=modules/algorithms.md \
 	modules/prototyping.md \
 	modules/io_viz.md
 SRCFILES=$(shell grep ':tangle "' modules/*.org|sed 's/\(.*:tangle "\)\([^"]*\)\(.*\)/\2/'|sort -u|sed 's|^../||')
