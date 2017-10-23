@@ -1,3 +1,4 @@
+# Use this to release: git checkout master && git pull && git checkout student && git pull && git push && make release && git push git@github.com:juhaj/damtp-research-programming.git student:master
 ORGFILES=course.org plans.org slides.org todo.org \
 	modules/algorithms.org \
 	modules/debugging.org \
@@ -34,9 +35,9 @@ MDFILES=modules/introduction.md \
 	modules/practices.md \
 	modules/practices2.md \
 	modules/python.md \
-	modules/mpi.md
-MDFILES_to_come=modules/algorithms.md \
-	modules/prototyping.md \
+	modules/mpi.md \
+	modules/algorithms.md
+MDFILES_to_come=modules/prototyping.md \
 	modules/io_viz.md
 SRCFILES=$(shell grep ':tangle "' modules/*.org|sed 's/\(.*:tangle "\)\([^"]*\)\(.*\)/\2/'|sort -u|sed 's|^../||')
 PDFFILES=
