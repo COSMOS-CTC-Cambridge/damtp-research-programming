@@ -535,7 +535,7 @@ Some standard modules
 
 ``` python
 import re
-re.sub(r'(\b[a-z]+ )(\1)+', r'\1', 'please remove repeated repeated repeated words')
+re.sub(r'(\b[a-z]+ )(\1)+', r'\1', 'please remove repeated repeated repeated words words words from this')
 ```
 
 `urllib`  
@@ -914,6 +914,31 @@ Exercises
 ### A tree using classes
 
 -   Create to a family tree for `magpie` which contains parent class instances
+
+### Closure
+
+Write a closure which provides you with a counter-function which remembers its state. It should take the initial value as a parameter and return that on the first call, incrementing by 1 for every further call.
+
+Your counter-maker and associated enclosed function must pass the following doctests:
+
+``` python
+>>> new_counter1 = make_counter(42)
+>>> new_counter2 = make_counter(42)
+>>> print(new_counter1())
+42
+>>> print(new_counter2())
+42
+>>> print(new_counter1())
+43
+>>> print(new_counter2())
+43
+>>> print(new_counter2())
+44
+>>> print(new_counter1())
+44
+```
+
+Note that you can actually save these to a file and read them in with doctest once you have the `make_counter` function defined if you feel adventurous.
 
 ### Fibonacci
 
