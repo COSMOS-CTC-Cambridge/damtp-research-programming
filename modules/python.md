@@ -816,6 +816,7 @@ print(newres==oldres)
 
 -   a better version of this is to use a *closure*: a function object that remembers values in enclosing scopes regardless of whether those scopes are still present in memory
     -   I'm lying of course: they are still in memory but there is no other way to access them
+-   variables in the enclosed function which are defined in the outer function are *read-only* unless defined non-local by `nonlocal variablename`
 
 ``` python
 def HigherOrder(param):
