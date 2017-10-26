@@ -214,7 +214,7 @@ c[1:3].map_sync(lambda x:x+1, data)
 
 ``` python
 import ipyparallel as ipp
-c = ipp.Client(profile="mpi", cluster_id="training_cluster_0")
+c = ipp.Client(profile="mpi_slurm", cluster_id="Azure_cluster_0")
 c.ids
 directview=c[:]
 directview.execute("import mpi4py").wait()
@@ -224,9 +224,9 @@ directview.execute("from mpi4py import MPI").wait()
 -   pass some data to workers asynchronously, let them do their work, gather results and output
 
 ``` python
-res1=directview.map(
+res1=directview.apply_async(
     lambda data: "Hello, World. I am rank "+
-    "{rank: 0{len}d} of your MPI communicator of {size} ranks and was sent data {d}".format(
+    "{rank: 0{len}d} of your MPI communicator of {size} ranks and was sent data\n{d}".format(
         rank=MPI.COMM_WORLD.Get_rank(),
         len=len(str(MPI.COMM_WORLD.Get_size())),
         size=MPI.COMM_WORLD.Get_size(), d=str(data)),
@@ -456,7 +456,7 @@ Running the equivalent code non-interactively does not cause such funny output s
 ``` bash
 %%bash
 cat ../codes/python/mapreduce.py
-srun --ntasks 8 python -- ../codes/python/mapreduce.py
+srun --ntasks 8 python3 -- ../codes/python/mapreduce.py
 ```
 
 Distributed Computing
