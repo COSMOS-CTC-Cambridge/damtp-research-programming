@@ -151,42 +151,20 @@ This will make sure the environment for parallel processing using ipyparallel ex
 
 ``` python
 %%bash
-echo Executing some setup...
-if ! [ -d ${HOME}/.ipython/profile_mpi_slurm ]
-then
-    ipython3 profile create --parallel --profile=mpi_slurm
-fi
-if ! grep -q "^c.IPClusterEngines.engine_launcher_class = " ${HOME}/.ipython/profile_mpi_slurm/ipcluster_config.py
-then
-    cat >> ${HOME}/.ipython/profile_mpi_slurm/ipcluster_config.py << EOF 
-c.IPClusterEngines.engine_launcher_class = 'MPI'
-c.MPILauncher.mpi_cmd = ['srun']
-EOF
-fi
-if ! grep -q "c.BaseParallelApplication.cluster_id = 'Azure_cluster_0'" ${HOME}/.ipython/profile_mpi_slurm/ipcluster_config.py
-then
-    cat >> ${HOME}/.ipython/profile_mpi_slurm/ipcluster_config.py << EOF 
-c.BaseParallelApplication.cluster_id = 'Azure_cluster_0'
-EOF
-fi
-```
-
-``` python
-%%bash
 ipcluster stop --profile=mpi_slurm --cluster-id='Azure_cluster_0'
 sleep 5
 ```
 
 ``` python
 %%bash
-ipcluster start --profile=mpi_slurm -n 8 --engines=MPI --cluster-id=mpi_slurm --ip='10.0.0.254' --MPIEngineSetLauncher.mpi_cmd='["srun"]' --daemon=True
+ipcluster start --profile=mpi_slurm -n 8 --engines=MPI --cluster-id='Azure_cluster_0' --ip='10.0.0.254' --MPIEngineSetLauncher.mpi_cmd='["srun"]' --daemon=True
 ```
 
 and
 
 ``` python
 import ipyparallel
-c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
+c = ipyparallel.Client(profile="mpi", cluster_id='Azure_cluster_0')
 ```
 
 -   By default, `ipyparallel` has no modules imported and
