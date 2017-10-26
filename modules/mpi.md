@@ -1,6 +1,19 @@
 Message Passing Interface
 =========================
 
+Logging in and accessing the Microsoft Azure Cloud HPC cluster
+--------------------------------------------------------------
+
+1.  Get your username and password — don't lose them
+2.  Use ssh to log into `slurmcluster01.westeurope.cloudapp.azure.com` using your username and password.
+3.  Change directory to `/share/data/yourusername`
+4.  Clone the course repo `git clone git@github.com:juhaj/damtp-research-programming.git`
+5.  Start your copy of jupyter: `my_jupyter`
+6.  Make note of the URL (or just token) presented
+7.  Replace the `localhost` bit of the URL with `http://slurmcluster01.westeurope.cloudapp.azure.com`
+8.  Point your browser there (note that the whole Cambridge course material up to yesterday's lecture is there, have fun).
+9.  Feel free to poke around nicely and use jupyter, python, C, C++, whatever; you should use `srun` for MPI jobs
+
 Parallel Processing
 -------------------
 
@@ -160,7 +173,7 @@ fi
 
 ``` python
 %%bash
-ipcluster stop --profile=mpi_slurm --cluster-id='Azure_cluster_0
+ipcluster stop --profile=mpi_slurm --cluster-id='Azure_cluster_0'
 sleep 5
 ```
 
