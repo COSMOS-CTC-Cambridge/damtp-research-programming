@@ -164,7 +164,7 @@ and
 
 ``` python
 import ipyparallel
-c = ipyparallel.Client(profile="mpi", cluster_id='Azure_cluster_0')
+c = ipyparallel.Client(profile="mpi_slurm", cluster_id='Azure_cluster_0')
 ```
 
 -   By default, `ipyparallel` has no modules imported and
