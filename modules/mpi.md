@@ -457,7 +457,7 @@ Running the equivalent code non-interactively does not cause such funny output s
 ``` bash
 %%bash
 cat ../codes/python/mapreduce.py
-mpirun -np 8 python -- ../codes/python/mapreduce.py
+srun -np 8 python -- ../codes/python/mapreduce.py
 ```
 
 Distributed Computing
