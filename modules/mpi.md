@@ -99,7 +99,7 @@ print("Hello, World. I am rank "+
 
 ``` python
 %%bash
-srun -np 23 python3 ../codes/python/mpi_hello_world_worst.py
+srun --ntasks 23 python3 ../codes/python/mpi_hello_world_worst.py
 ```
 
 -   There is no easy way to run interactive MPI jobs
@@ -107,7 +107,7 @@ srun -np 23 python3 ../codes/python/mpi_hello_world_worst.py
 -   however, there's a python module called `ipyparallel` \[fn:dask<sub>workstoofootnote</sub>: Dask will also work but it's more complicated and its delayed execution model is quite alien to the typical MPI usage so we skip it here.\] which gives some level of interactivity
     -   but the non-sequential nature of parallel jobs bring some complications when a sequential interface is built on top of it
     -   we will look at this in a moment
--   If you do not believe interactive MPI is no fun, this is how to do it: `srun -np 8 xterm -e python3`
+-   If you do not believe interactive MPI is no fun, this is how to do it: `srun --ntasks 8 xterm -e python3`
 -   You end up with 8 separate terminal windows and every single python command must be typed in ALL of them.
 -   There are terminal multiplexers which can take one input and replicate it to N terminals, but you still end up with N+1 terminal windows.
 
@@ -117,7 +117,7 @@ srun -np 23 python3 ../codes/python/mpi_hello_world_worst.py
 %%bash
 cat ../codes/cpp/hello.cpp
 mpicxx -o hello ../codes/cpp/hello.cpp
-srun -np 23 ./hello
+srun --ntasks 23 ./hello
 ```
 
 ### The ipyparallel module
@@ -156,8 +156,16 @@ then
 c.BaseParallelApplication.cluster_id = 'Azure_cluster_0'
 EOF
 fi
-#ipcluster start -n 4 --engines=MPI --profile=mpi --cluster-id=Azure_cluster_0 --daemon=True
+```
+
+``` python
+%%bash
 ipcluster stop --profile=mpi_slurm --cluster-id='Azure_cluster_0
+sleep 5
+```
+
+``` python
+%%bash
 ipcluster start --profile=mpi_slurm -n 8 --engines=MPI --cluster-id=mpi_slurm --ip='10.0.0.254' --MPIEngineSetLauncher.mpi_cmd='["srun"]' --daemon=True
 ```
 
@@ -457,7 +465,7 @@ Running the equivalent code non-interactively does not cause such funny output s
 ``` bash
 %%bash
 cat ../codes/python/mapreduce.py
-srun -np 8 python -- ../codes/python/mapreduce.py
+srun --ntasks 8 python -- ../codes/python/mapreduce.py
 ```
 
 Distributed Computing
