@@ -106,7 +106,7 @@ Think Distributed --- Parallel Taken to the Extreme
 ### The Third Level of Parallelism
 
 -   Lash several, even millions, of machines (*nodes*) together using an *interconnect* to work together on the same problem
-    -   top-1 has 40960 nodes (machines) with 256+4 cores each (you do the maths)
+    -   top-1 (and I'm writing this just days before a new list will be publishes!) has 40960 nodes (machines) with 256+4 cores each (you do the maths)
     -   top-4 has 98304 nodes with 16+1 cores each
     -   trend is to increase cores/node and not so much \# nodes
 -   Distribute problem data across nodes, each node working on its part of the problem
@@ -194,7 +194,7 @@ Exercises
     -   a variable describing the discrete lattice
 -   the function declaration shall be `def Laplacian(indata, result, d)`
 -   remember the correctness tests
--   in jupyter/ipython you can use `%timeit Laplacian(X,Y,d)` to test your performance (but we'll deal with optimisation next week)
+-   in jupyter/ipython you can use `%timeit Laplacian(X,Y,d)` to test your performance (but we'll deal with optimisation later)
 
 ### Simulated Annealing
 
