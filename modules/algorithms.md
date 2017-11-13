@@ -176,11 +176,12 @@ Exercises
 
 -   write a function to compute the discrete Laplacian of some data
 -   the function shall have three inputs:
-    -   the data whose Laplacian is to be computed
-    -   a variable to hold the resulting Laplacian
+    -   the data whose Laplacian is to be computed, a 3D numpy array
+    -   a variable to hold the resulting Laplacian, a 3D numpy array
     -   a variable describing the discrete lattice
 -   the function declaration shall be `def Laplacian(indata, result, d)`
 -   remember the correctness tests
+-   you should consider the outermost points of your array as boundary conditions
 -   in jupyter/ipython you can use `%timeit Laplacian(X,Y,d)` to test your performance (but we'll deal with optimisation later)
 
 ### Simulated Annealing
