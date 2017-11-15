@@ -969,6 +969,20 @@ results.display_outputs()
     -   if there is any concern of the effect of the wrappers on performance, one can just remove the compatibility layer
     -   this version is available at `codes/python/distributed_computing_batch.py`
 
+Interlude: *slurm* Batch Jobs
+-----------------------------
+
+-   you will have noticed the command *srun* in the examples: that tells the cluster to execute the rest of the command line on the *compute nodes*
+-   due to problems on the cluster, we'll now see cases where srun says `srun: job 23 queued and waiting for resources`
+    -   it will stay in a job *queue* until such a time when there are enough resources
+    -   it will then execute normally
+    -   there is now a 2-minute time limit on the jobs to make sure turnaround time is quick enough for the exercises
+    -   please also do all your testing with 2-4 ranks, only (that's the value of the `--ntasks` parameter)
+    -   this also means running `ipyparallel` and `ipcluster` is impractical, sorry
+-   you'll find lots of example codes in the `codes/python` directory in the repo
+    -   feel free to use those, some of those are the codes from lecture notes, some are example solutions, some are examples of how not to do things and some are stuff yet to be covered on the lectures
+    -   they should help you get the below done
+
 Exercises
 ---------
 
