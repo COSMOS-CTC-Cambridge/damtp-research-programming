@@ -17,145 +17,9 @@ Maximum of the Gradient Using PETSc
 -   this should provide you with a good cookbook for how to do just about anything using PETSc
     -   but there are loads of smarter ways of doing things in PETSc which may make a big difference for efficiency and performance when used
 
-### Maximum of Gradient Revisited
-
--   First some boilerplate which just imports necessary packages and initialises those which need initialisation (the handle initialisations happen on the `from ...` lines)
-
-``` python
-from __future__ import division
-import sys
-import time
-import numpy
-import mpi4py
-from mpi4py import MPI
-import petsc4py
-petsc4py.init(sys.argv)
-from petsc4py import PETSc
-import cProfile
-```
-
--   Next we need to set up some infrastructure: `PETSc.DMDA` is the most basic distributed data manager and its `StencilType` attribute just define what shape region around a grid point is needed to compute whatever we want to compute at that point (options are `BOX` and `STAR`); and `BoundaryType` specifies whether the boundary is periodic, or somtheing else; 1=ssize= will become the size of this stencil later.
-
-``` python
-stype = PETSc.DMDA.StencilType.BOX
-ssize = 1
-```
-
--   Boundaries of the lattice can be `NONE`, `GHOSTED`, `TWIST`, `MIRROR` (not implemented in 3d yet) or `PERIODIC`; `GHOSTED` means the ghost points exist on the external boundary, too. Those can be used to store boundary conditions. With `NONE` you need to special case the exterior boundary and with `TWIST` you create Möbius strips etc.
-
-``` python
-bx    = PETSc.DMDA.BoundaryType.PERIODIC
-by    = PETSc.DMDA.BoundaryType.PERIODIC
-bz    = PETSc.DMDA.BoundaryType.PERIODIC
-```
-
--   With PETSc you rarely need any explicit MPI. For these examples, this is the only thing you need: the communicator of the MPI world we want to work in. For PETSc the top-level code almost invariably uses `PETSc.COMM_WORLD` which is usually the same as `MPI.COMM_WORLD`.
-
-``` python
-comm = PETSc.COMM_WORLD
-```
-
--   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed \\verb{-m}, `-n`, or `-p`.
-    -   `PETSs.DECIDE` is an "invalid" value for any PETSc routine
-    -   in this case we store `PETSc.DECIDE` in `m, n, p` unless user gave them on command line: when we pass that to any PETSc routine it causes PETSc to (try to) find sensible defaults
-
-``` python
-OptDB = PETSc.Options() #get PETSc option DB
-m = OptDB.getInt('m', PETSc.DECIDE)
-n = OptDB.getInt('n', PETSc.DECIDE)
-p = OptDB.getInt('p', PETSc.DECIDE)
-```
-
--   This creates the distributed manager. Note how our variables above get used. There's one we did not explain: `dof` is simply the number of degrees of freedom (number of unknowns) per lattice site. The negative `sizes` values tells PETSc to get the value from command line parameters `-da_grid_x M`, `-da_grid_y N`, and `-da_grid_z P`, or use the magnitudes of the supplied parameter `sizes` if the corresponding cmdline one cannot be found. The latter two method calls handle the command line bit.
--   Note that this is not the shortest possible code: all the above lines can be omitted and defaults used in the `PETSc.DMDA().create()` call
-    -   it is instructive to see how to write a **useful** program instead of simplest possible example
-
-``` python
-dm = PETSc.DMDA().create(dim=3, sizes = (-6,-8,-5), proc_sizes=(m,n,p),
-                         boundary_type=(bx,by,bz), stencil_type=stype,
-                         stencil_width = ssize, dof = 1, comm = comm, 
-                         setup = False)
-dm.setFromOptions()
-dm.setUp()
-```
-
--   We have yet to allocate our "big data", so let's do that: the variable to hold our data
-    -   this is a "vector" spanning all our workers
-    -   it uses the `dm` we just created to figure out the neighbours, dimensions etc
-
-``` python
-data = dm.createGlobalVector()
-```
-
--   At this stage we can start thinking about our problem; we borrow heavily from the example in the MPI lecture
--   the call to `dm.getVecArray()` is PETSc's most useful call: the returned data structure is a numpy array, indexable in almost the normal fashion with distributed-global indices
-    -   almost: index `array[-1]` is not last element, but "left of 0": the first ghost element to the "left of 0"
--   `dm.getRanges()` returns the distributed-local ranges of the lattice coordinates currect rank has
--   `dm.getProcSizes()` returns the number of ranks in each direction
-
-``` python
-def initialise(dm, field):
-    field_ = dm.getVecArray(field)
-    (zs, ze), (ys, ye), (xs, xe) = dm.getRanges()
-    sizes = dm.getSizes()
-    for z in range(zs,ze):
-        for y in range(ys,ye):
-            start = (xs + (y)*sizes[2] +
-                     (z)*sizes[1]*sizes[2])
-            stop = start + (xe-xs)
-            field_[z,y,:] = numpy.arange(start, stop, step=1)**2
-    return
-```
-
--   That isn't much simpler than pure MPI because we have funny map from grid coordinate to data value
--   But it did not require us to write any support code unlike pure MPI
--   Define a function to compute the gradients
-
-``` python
-def compute_grad(dm, field, dmgrad, grad):
-    local_field = dm.createLocalVector()
-    dm.globalToLocal(field, local_field)
-    field_array = dm.getVecArray(local_field)
-    grad_array = dmgrad.getVecArray(grad)
-    temp=numpy.array(numpy.gradient(field_array[:]))[:,1:-1,1:-1,1:-1]
-    for coo in [0,1,2]:
-        grad_array[:,:,:,coo] = temp[coo][:,:,:]
-```
-
--   In a typical program `local_field` is not recreated every time it is needed, thus removing one line here
--   The ghost comms happens in the `dm.globalToLocal` method
--   Again, no extra setup of datatypes or communication routines is necessary
--   Since PETSc handles our data, we cannot simply grow our numpy array like in pure MPI example but need to create a PETSc data structure for our gradients
-    -   this could be done in other several ways, too
-
-``` python
-dmgrad = PETSc.DMDA().create(dim=3, sizes = dm.sizes,
-                             proc_sizes=dm.proc_sizes,
-                             boundary_type=(bx,by,bz), stencil_type=stype,
-                             stencil_width = ssize, dof = 3, comm = comm,
-                             setup = False)
-dmgrad.setFromOptions()
-dmgrad.setUp()
-grads = dmgrad.createGlobalVector()
-```
-
--   Then the actual work:
-    -   Initialise
-    -   Compoute gradients
-    -   Find the maximum:
-
-``` python
-initialise(dm, data)
-compute_grad(dm, data, dmgrad, grads)
-maxgrad=grads.max()
-if PETSc.COMM_WORLD.rank == 0:
-    print("Global maximum of the gradient was {maxgrad}.".format(
-        maxgrad=maxgrad))
-```
-
 ### Exercise
 
-1.  The previous code is available `../codes/python/max_grad_petsc.py`: go and try to run it with `mpirun -np 4` to double check the result is the same.
+1.  The previous code is available `../codes/python/max_grad_petsc.py`: go and try to run it with `srun --ntasks=4` to double check the result is the same.
 2.  Write unit tests for at least initialisation and final result.
 3.  The code is buggy: what happens if you try to run with 7 ranks? Why? Can this be fixed? How/why?
 
@@ -211,27 +75,26 @@ dm.setUp()
 
 -   At this stage we need to define our physics. We use the Poisson equation here, but any linear boundary value PDE would work. Obviously, initial value problems must be dealt with differently.
 -   Comments on the code
-    `__init__()`  
-    -   called when class is instantiated; it just saves given lattice spacings `dx`, `dy`, `dz`; and creates a data structure `self.g` for the RHS.
+    -   `__init__()`
+        -   called when class is instantiated; it just saves given lattice spacings `dx`, `dy`, `dz`; and creates a data structure `self.g` for the RHS.
+    -   `rhs()`
+        -   we specify the value of `self.g` here simply as all ones, could be anything (as long as linear);
+        -   the `rhs_array` will gets its values in the usual fashion from 7-point Laplacian stencil
+        -   `self.dm.getRanges()` returns the distributed-local ranges of the lattice coordinates currect rank has
+        -   `self.dm.getSizes()` gives the distributed-global sizes of the lattice: needed in the loop for detecting when to apply boundary conditions
+        -   finally, a very inefficient loop setting the values: for most lattice points it is a `rhs_array[i,j,k] = rhs_array[i,j,k]` but this is only ran once, so not too important
+        -   the non-trivial values are the boundary conditions (i.e. *ϕ* = 7), see plot
 
-    `rhs()`  
-    -   we specify the value of `self.g` here simply as all ones, could be anything (as long as linear);
-    -   the `rhs_array` will gets its values in the usual fashion from 7-point Laplacian stencil
-    -   `self.dm.getRanges()` returns the distributed-local ranges of the lattice coordinates currect rank has
-    -   `self.dm.getSizes()` gives the distributed-global sizes of the lattice: needed in the loop for detecting when to apply boundary conditions
-    -   finally, a very inefficient loop setting the values: for most lattice points it is a `rhs_array[i,j,k] = rhs_array[i,j,k]` but this is only ran once, so not too important
-    -   the non-trivial values are the boundary conditions (i.e. *ϕ* = 7), see plot
+            ![](images/boundary_conditions.png)
 
-        ![](images/boundary_conditions.png)
-
-    `compute_operators()`  
-    -   dealing with distributed matrices almost always starts with `A.zeroEntries()` and ends with `A.assemble()`
-    -   `PETSc.Mat.Stencil()` returns a convenient helper object to deal with setting sparse matrix values simply by using the lattice coordinates instead of tranaforming them to matrix indices
-        -   sparse values cannot be set using normal `[]` type indexing
-        -   slight performance penalty but again we do this just once
-    -   the `for index,value` loop goes over the indices of all non-zero entries on the current row and sets the values of the corresponding elements
-    -   `row.index` and `col.index` are used to calculate the matrix indices from lattice indices; `row.field` and `col.field` refer to which degree of freedom these values apply to in said conversion (the `dof` in the `PETSc.DMDA().create()`)
-    -   finally, `A.setValueStencil()` puts the values in
+    -   `compute_operators()`
+        -   dealing with distributed matrices almost always starts with `A.zeroEntries()` and ends with `A.assemble()`
+        -   `PETSc.Mat.Stencil()` returns a convenient helper object to deal with setting sparse matrix values simply by using the lattice coordinates instead of tranaforming them to matrix indices
+            -   sparse values cannot be set using normal `[]` type indexing
+            -   slight performance penalty but again we do this just once
+        -   the `for index,value` loop goes over the indices of all non-zero entries on the current row and sets the values of the corresponding elements
+        -   `row.index` and `col.index` are used to calculate the matrix indices from lattice indices; `row.field` and `col.field` refer to which degree of freedom these values apply to in said conversion (the `dof` in the `PETSc.DMDA().create()`)
+        -   finally, `A.setValueStencil()` puts the values in
 
 ``` python
 class poisson(object):
@@ -353,7 +216,7 @@ print(ksp.getSolution().getArray()[:])
 
 ``` bash
 %%bash
-mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
+srun --ntasks=1 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
 -da_grid_z 20
 ```
 
@@ -373,7 +236,7 @@ mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 3
 
 ``` bash
 %%bash
-mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
+srun --ntasks=1 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
 -da_grid_z 20 -ksp_type gmres -pc_type bjacobi
 ```
 
@@ -381,16 +244,51 @@ mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 3
 
 ``` bash
 %%bash
-mpirun -np 1 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
--da_grid_z 80 -ksp_type gmres -pc_type bjacobi
-mpirun -np 2 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
--da_grid_z 80 -ksp_type gmres -pc_type bjacobi
-mpirun -np 4 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
--da_grid_z 80 -ksp_type gmres -pc_type bjacobi
-mpirun -np 8 python -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
--da_grid_z 80 -ksp_type gmres -pc_type bjacobi
+srun --ntasks=1 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
 ```
 
+``` bash
+%%bash
+srun --ntasks=2 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+``` bash
+%%bash
+srun --ntasks=4 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+``` bash
+%%bash
+srun --ntasks=8 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+``` bash
+%%bash
+srun --ntasks=16 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+``` bash
+%%bash
+srun --ntasks=32 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+``` bash
+%%bash
+srun --ntasks=64 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_grid_y 90 \
+-da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
+```
+
+-   That was about 30× speedup for 64× the resource usage --- not very impressive
+    -   but very, very few codes can *strong scale* to a factor of 64
+-   Ultimately what kills strong scaling is the sequential bits of code, such as ghost exchanges
+    -   ghosts are surface/volume, so increasing size should give better results (until 1 node runs out of memory)
+    -   indeed it does: at 200 × 200 × 200 the timings for 1 and 64 are:
 -   Next we forget about linearity and use non-linear solvers; for familiarity and emphasising the small differences we first solve ∇<sup>2</sup>*ϕ*(*x*, *y*)−*g*(*x*, *y*)=0 and then an actual non-linear equation
 
 Non-Linear Iterative Poisson Solver

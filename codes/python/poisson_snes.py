@@ -2,7 +2,7 @@
 '''
 Try:
 
-Test different run-times: for params in "" "-snes_mf 1" "-snes_fd 1" "-snes_mf_operator 1" "-snes_fd_color 1" "-snes_fd 0 -snes_mf 0 -snes_fd_color 0 -snes_mf_operator 0"; do echo Params: $params; ipython  --pdb  --gui=wx -- heat.py -snes_converged_reason -snes_monitor -da_grid_x 30 -da_grid_y 20 -da_grid_z 10  $params;done
+Test different run-times: for params in "" "-snes_mf 1" "-snes_fd 1" "-snes_mf_operator 1" "-snes_fd_color 1" "-snes_fd 0 -snes_mf 0 -snes_fd_color 0 -snes_mf_operator 0"; do echo Params: $params; ipython3  --pdb  --gui=wx -- heat.py -snes_converged_reason -snes_monitor -da_grid_x 30 -da_grid_y 20 -da_grid_z 10  $params;done
 And also -snes_check_jacobian to check Jacobian
 
 1. Direct Linear Solve With Actual Matrix
