@@ -35,8 +35,8 @@ $$\begin{equation}
 \nabla^2 \phi(x,y) - g(x,y) = 0
 \end{equation}$$
 
--   Direct Solve is *O*((*N**x* \* *N**y*)<sup>3</sup>) complexity, so be careful
--   It also needs *O*((*N**x* \* *N**y*)<sup>2</sup>) of storage!
+-   Direct Solve is *O*((*N*<sub>*x*</sub>*N*<sub>*y*</sub>)<sup>3</sup>) complexity, so be careful
+-   It also needs *O*((*N*<sub>*x*</sub>*N*<sub>*y*</sub>)<sup>2</sup>) of storage!
 -   Let's see what the code looks like.
 
 ``` python
