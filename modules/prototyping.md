@@ -2,7 +2,7 @@ Prototyping Parallel Programs Using Python
 ==========================================
 
 -   for actual computation, you should avoid doing the compute-heavy bits in python
-    -   if the compute heavy part is in FFTW or inside scipy/numpy/similar, it should be fine: those libraries are not python, they just have a python interface
+    -   if the compute heavy part is in FFTW or inside =scipy=/=numpy=/similar, it should be fine: those libraries are not python, they just have a python interface
 -   you can also use Cython to generate C-language python modules automatically, it will be very fast when done right
     -   and it isn't any harder to do right than direct C/C++/Fortran code anyway
 
@@ -34,14 +34,14 @@ from petsc4py import PETSc
 import cProfile
 ```
 
--   Next we need to set up some infrastructure: `PETSc.DMDA` is the most basic distributed data manager and its `StencilType` attribute just define what shape region around a grid point is needed to compute whatever we want to compute at that point (options are `BOX` and `STAR`); and `BoundaryType` specifies whether the boundary is periodic, or somtheing else; 1=ssize= will become the size of this stencil later.
+-   Next we need to set up some infrastructure: `PETSc.DMDA` is the most basic distributed data manager and its `StencilType` attribute just define what shape region around a grid point is needed to compute whatever we want to compute at that point (options are `BOX` and `STAR`); and `BoundaryType` specifies whether the boundary is periodic, or somtheing else; `ssize` will become the size of this stencil later.
 
 ``` python
 stype = PETSc.DMDA.StencilType.BOX
 ssize = 1
 ```
 
--   Boundaries of the lattice can be `NONE`, `GHOSTED`, `TWIST`, `MIRROR` (not implemented in 3d yet) or `PERIODIC`; `GHOSTED` means the ghost points exist on the external boundary, too. Those can be used to store boundary conditions. With `NONE` you need to special case the exterior boundary and with `TWIST` you create Möbius strips etc.
+-   Boundaries of the lattice can be `NONE`, `GHOSTED`, `TWIST`, `MIRROR` (not implemented in 3d yet in v3.7) or `PERIODIC`; `GHOSTED` means the ghost points exist on the external boundary, too. Those can be used to store boundary conditions. With `NONE` you need to special case the exterior boundary and with `TWIST` you create Möbius strips etc.
 
 ``` python
 bx    = PETSc.DMDA.BoundaryType.PERIODIC
@@ -55,7 +55,7 @@ bz    = PETSc.DMDA.BoundaryType.PERIODIC
 comm = PETSc.COMM_WORLD
 ```
 
--   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed \\verb{-m}, `-n`, or `-p`.
+-   PETSc handles those pesky things called command line parameters (and configuration files!) for us, too. Let's see if we have been passed $\\verb{-m}$, `-n`, or `-p`. TODO!!!
     -   `PETSs.DECIDE` is an "invalid" value for any PETSc routine
     -   in this case we store `PETSc.DECIDE` in `m, n, p` unless user gave them on command line: when we pass that to any PETSc routine it causes PETSc to (try to) find sensible defaults
 
@@ -148,10 +148,20 @@ grads = dmgrad.createGlobalVector()
 initialise(dm, data)
 compute_grad(dm, data, dmgrad, grads)
 maxgrad=grads.max()
-if PETSc.COMM_WORLD.rank == 0:
-    print("Global maximum of the gradient was {maxgrad}.".format(
-        maxgrad=maxgrad))
-    print("The result is {}.".format(["incorrect", "correct"][maxgrad[1] == 2*dm.sizes[2]*dm.sizes[1]*(-1+dm.sizes[2]*dm.sizes[1]*(dm.sizes[0]-1))]))
+dm_x,dm_y,dm_z = dm.getSizes()
+PETSc.Sys.syncPrint("Your grid shape was {} x {} x {}".format(dm_x, dm_y, dm_z))x
+PETSc.Sys.syncPrint("Global maximum of the gradient was {maxgrad}.".format(
+    maxgrad=maxgrad))
+PETSc.Sys.syncPrint("The result is {}.".format(
+    ["incorrect", "correct"][maxgrad[1] == 2*dm.sizes[2]*dm.sizes[1]*(
+        -1+dm.sizes[2]*dm.sizes[1]*(dm.sizes[0]-1))]))
+```
+
+-   or with multiple ranks
+
+``` python
+%%bash
+srun --ntasks=100 python3 ../codes/python/max_grad_petsc.py -da_grid_x 120 -da_grid_y 110 -da_grid_z 100
 ```
 
 ### Exercise
@@ -169,7 +179,7 @@ Linear Solves
 
 
 $$\begin{equation}
-\nabla^2 \phi(x,y) - g(x,y) = 0
+\nabla^2 \phi(x,y) = g(x,y)
 \end{equation}$$
 
 -   Direct Solve is *O*((*N*<sub>*x*</sub>*N*<sub>*y*</sub>)<sup>3</sup>) complexity, so be careful
@@ -353,7 +363,7 @@ print(ksp.getSolution().getArray()[:])
 
 ``` bash
 %%bash
-srun --ntasks=1 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
+srun --ntasks=4 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid_y 30 \
 -da_grid_z 20
 ```
 
@@ -368,7 +378,8 @@ srun --ntasks=1 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 40 -da_grid
 -   so what does this look like as an iterative solver?
     -   since we process command line options on line `ksp.setFromOptions()` all we need to do is pass the correct parameters
     -   `-ksp_type gmres` is the default and actually very good, so we'll use that
-    -   `-pc_type ilu` is also the default, not necessarily the best but there are dozens to choose from and the best is problem dependent, so we use the default here, too
+    -   `-pc_type ilu` is also the default, not necessarily the best but there are dozens to choose from and the best is problem dependent
+        -   we use a good general preconditioner, block Jacobi: it is much more stable than ILU
     -   note there is *no need* to alter the source code *at all*
 
 ``` bash
@@ -421,12 +432,19 @@ srun --ntasks=64 python3 -- ../codes/python/poisson_ksp.py -da_grid_x 100 -da_gr
 -da_grid_z 80 -ksp_type gmres -pc_type bjacobi| grep "calls in"|sort -n
 ```
 
+-   results from a particular InfiniBand cluster are
+
+``` python
+x=numpy.array([2**n for n in range(0,7)])
+y=numpy,array([158.089, 84.78, 48.654, 27.543, 21.237, 11.033, 5.432, 3.032]
+```
+
 -   That was about 30× speedup for 64× the resource usage --- not very impressive
     -   but very, very few codes can *strong scale* to a factor of 64
 -   Ultimately what kills strong scaling is the sequential bits of code, such as ghost exchanges
     -   ghosts are surface/volume, so increasing size should give better results (until 1 node runs out of memory)
     -   indeed it does: at 200 × 200 × 200 the timings for 1 and 64 are:
--   Next we forget about linearity and use non-linear solvers; for familiarity and emphasising the small differences we first solve ∇<sup>2</sup>*ϕ*(*x*, *y*)−*g*(*x*, *y*)=0 and then an actual non-linear equation
+-   Next we forget about linearity and use non-linear solvers; for familiarity and emphasising the small differences we first solve ∇<sup>2</sup>*ϕ*(*x*, *y*)=*g*(*x*, *y*) and then an actual non-linear equation
 
 Non-Linear Iterative Poisson Solver
 -----------------------------------
@@ -573,7 +591,6 @@ snes.setMonitor(poisson_problem.monitor)
     -   `FD Color` is another finite differencing method
     -   `MF Operator` is another matrix-free method
 -   we just sort the various options here
--   Exercise: compare the speeds of the various methods
 
 ``` python
 if (OptDB.hasName("snes_mf")):
@@ -636,11 +653,16 @@ cProfile.run("snes.solve(None, field)")
 end = time.clock()
 ```
 
+1.  Exercise
+
+    -   compare the speeds of the various methods
+    -   are the scaling properties identical?
+
 ### Non-linear Poisson Equation using a non-linear solver (PETSc SNES)
 
 -   We want to solve
 
-∇<sup>2</sup>*f*(*x*)−*g*(*x*)*f*(*x*)<sup>2</sup> = 0
+∇<sup>2</sup>*f*(*x*)=*g*(*x*)*f*(*x*)<sup>2</sup>
 
 -   the only difference to the Poisson code is that now our RHS is non-linear and therefore a term like *g**f*<sup>2</sup> appears in RHS and the diagonal elements of the Jacobian have and extra term
 

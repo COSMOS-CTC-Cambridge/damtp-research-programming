@@ -66,7 +66,10 @@ grads = dmgrad.createGlobalVector()
 initialise(dm, data)
 compute_grad(dm, data, dmgrad, grads)
 maxgrad=grads.max()
-if PETSc.COMM_WORLD.rank == 0:
-    print("Global maximum of the gradient was {maxgrad}.".format(
-        maxgrad=maxgrad))
-    print("The result is {}.".format(["incorrect", "correct"][maxgrad[1] == 2*dm.sizes[2]*dm.sizes[1]*(-1+dm.sizes[2]*dm.sizes[1]*(dm.sizes[0]-1))]))
+dm_x,dm_y,dm_z = dm.getSizes()
+PETSc.Sys.syncPrint("Your grid shape was {} x {} x {}".format(dm_x, dm_y, dm_z))x
+PETSc.Sys.syncPrint("Global maximum of the gradient was {maxgrad}.".format(
+    maxgrad=maxgrad))
+PETSc.Sys.syncPrint("The result is {}.".format(
+    ["incorrect", "correct"][maxgrad[1] == 2*dm.sizes[2]*dm.sizes[1]*(
+        -1+dm.sizes[2]*dm.sizes[1]*(dm.sizes[0]-1))]))
