@@ -175,7 +175,7 @@ f.close()
 
 ``` python
 %%bash
-srun --ntasks 8 python ../codes/python/parallel_io_h5py.py
+srun --ntasks 4 python3 ../codes/python/parallel_io_h5py.py
 ```
 
 -   performance might still be bad, because
