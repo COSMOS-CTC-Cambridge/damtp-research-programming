@@ -42,7 +42,7 @@ THIS NEEDS BASH KERNEL, REMEMBER TO CHANGE FROM MENU
 #### A git repository (or just repo)
 
 -   Simply a list of commits
--   Represented by a DAG: Direct Acyclic Graph
+-   Represented by a DAG: Directed Acyclic Graph
 -   Let A...F be commits, the DAG could then be e.g.
 
 ![](images/git_dag_1.png)
@@ -281,7 +281,7 @@ cd ../clone2
 ![](images/git_dag_8.png)
 
 -   the reason we cannot push is the existence of `D` in origin: if our collaborator had not pushed their commit `D` into origin, we would be able to push
-    -   and indeed turning the tables, **they** did that when they pushed
+    -   and indeed turn the tables, **they** did that when they pushed
 -   this is **not** a fast-forward merge since we both have modified file `C`
 -   the procedure is
     1.  fetch
@@ -332,18 +332,38 @@ git pull
 #### *Evil Merge*
 
 -   sometimes a merge will succeed without conflicts but **the contents are wrong**: an evil merge gives no warning that something might be amiss
-    -   for example, suppose you are developing a code which needs to calculate $1-\\frac{1}{2}x^2+\\frac{1}{24}x^4$ a lot
-        -   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
-        -   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
-        -   after a successful, non-conflicted merge, your results will not be what you expected!
-    -   *Evil Merge* changed your results or even broke your program but caused no conflicts
-    -   can also happen with conflicts when the evil bit is not the conflicting one
-    -   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
-    -   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
+    -   for example, suppose you are developing a code which needs to calculate
+
+
+$$\begin{equation}
+1-\frac{1}{2}x^2+\frac{1}{24}x^4
+\end{equation}$$
+
+a lot
+
+-   you have just added a new option to the code which produces a visualisation of some results, i.e. nothing to do with calculating cos or the three first terms of its Taylor expansion
+-   your collaborator, meanwhile, edits the Taylor expansion routine to just compute the first two terms because his profiling (later in the course) had revealed the increase in precision does not warrant the increasein runtime
+-   after a successful, non-conflicted merge, your results will not be what you expected!
+-   *Evil Merge* changed your results or even broke your program but caused no conflicts
+-   can also happen with conflicts when the evil bit is not the conflicting one
+-   if "evil" happens in the conflicting bit the reviewer (merger) is supposed to notice, and has at least been warned
+-   one of our exercises is designed to produce a high likelihood of an evil merge, so watch out
 
 ### Exercises
 
--   please clone the playground
+#### Get up-to-date course notes
+
+1.  Go to the Azure host: `ssh <yourusername>@slurmcluster01.westeurope.cloudapp.azure.com`.
+2.  Still on the Azure host, change the working directory to `/share/data/<yourusername>`
+3.  Clone the course repo in this directory
+    1.  Do the next part of the exercise on the next lecture, it will be pointless right now
+
+4.  In the directory you cloned the repo to, get the latest versions of the notes from the remote repo.
+    1.  If you viewed the `.md` files using jupyter, you will get conflicts due to jupyter's autosave feature.
+    2.  If you made any other changes, you may or may not get conflicts.
+    3.  Probably the best way to deal with jupyter's autosave feature is to always checkout a new local branch and only ever update master from the remote. One way to do this is explained on the [course website](https://github.com/juhaj/damtp-research-programming).
+
+5.  please clone the playground
     -   if you have a github account with ssh keypair set up, use `git clone git@github.com:juhaj/playground.git`
     -   if you don't, use `git clone https://github.com/juhaj/playground.git`
 

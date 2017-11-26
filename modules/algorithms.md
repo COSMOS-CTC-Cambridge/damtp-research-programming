@@ -106,7 +106,7 @@ Think Distributed --- Parallel Taken to the Extreme
 ### The Third Level of Parallelism
 
 -   Lash several, even millions, of machines (*nodes*) together using an *interconnect* to work together on the same problem
-    -   top-1 has 40960 nodes (machines) with 256+4 cores each (you do the maths)
+    -   top-1 (and I'm writing this just days before a new list will be publishes!) has 40960 nodes (machines) with 256+4 cores each (you do the maths)
     -   top-4 has 98304 nodes with 16+1 cores each
     -   trend is to increase cores/node and not so much \# nodes
 -   Distribute problem data across nodes, each node working on its part of the problem
@@ -115,10 +115,8 @@ Think Distributed --- Parallel Taken to the Extreme
         -   Apache Spark
 -   The 32x and 1000x above can "now" become much bigger, even over 1 000 000x
 
-Decrease time-to-solution: *strong scaling*
--------------------------------------------
-
-&lt;&lt;Strong Scaling&gt;&gt;
+Decrease time-to-solution: strong scaling
+-----------------------------------------
 
 -   assume an **ideal** world
 -   now the inter-node communication becomes a bottle-neck: theoretical limit
@@ -154,23 +152,12 @@ Ensure scalability first
 -   So, for now, we'll write distributed parallel code and worry about on-node and in-core performance later
 -   Fortunately, a good choice of scientific library will deal with most distributed computing issues
     -   On this course, we will use *PETSc* but there are others, like
-        SLEPc  
-        everything you want from matrices, sparse or otherwise (depends on PETSc)
-
-        ScaLAPACK  
-        only ever use for matrices that cannot be stored in sparse format
-
-        FEniCS  
-        A Finite Element Method (FEM) solver library (lots of dependencies, including PETSc)
-
-        ClawPACK/PyCLAW  
-        A Finite Volume Method (FVM) solver library (you guessed it, depends on PETSc)
-
-        Trilinos  
-        the only real alternative to the PETSc family in very large scale frameworks, but very complex to install: contains 57 separate packages!
-
-        FFTW  
-        "the standard" FFT library, has shortcomings but (although you probably want to build your distributed version out of non-distributed 1D FFTs)
+        -   SLEPc: everything you want from matrices, sparse or otherwise (depends on PETSc)
+        -   ScaLAPACK: only ever use for matrices that cannot be stored in sparse format
+        -   FEniCS: A Finite Element Method (FEM) solver library (lots of dependencies, including PETSc)
+        -   ClawPACK/PyCLAW: A Finite Volume Method (FVM) solver library (you guessed it, depends on PETSc)
+        -   Trilinos: the only real alternative to the PETSc family in very large scale frameworks, but very complex to install: contains 57 separate packages!
+        -   FFTW: "the standard" FFT library, has shortcomings but (although you probably want to build your distributed version out of non-distributed 1D FFTs)
 
 An aside: offload to an accelerator or GPU
 ------------------------------------------
@@ -189,12 +176,13 @@ Exercises
 
 -   write a function to compute the discrete Laplacian of some data
 -   the function shall have three inputs:
-    -   the data whose Laplacian is to be computed
-    -   a variable to hold the resulting Laplacian
+    -   the data whose Laplacian is to be computed, a 3D numpy array
+    -   a variable to hold the resulting Laplacian, a 3D numpy array
     -   a variable describing the discrete lattice
 -   the function declaration shall be `def Laplacian(indata, result, d)`
 -   remember the correctness tests
--   in jupyter/ipython you can use `%timeit Laplacian(X,Y,d)` to test your performance (but we'll deal with optimisation next week)
+-   you should consider the outermost points of your array as boundary conditions
+-   in jupyter/ipython you can use `%timeit Laplacian(X,Y,d)` to test your performance (but we'll deal with optimisation later)
 
 ### Simulated Annealing
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="2.0">
+  <Domain>
+    <Grid Name="mymesh" GridType="Uniform">
+      <Topology TopologyType="3DCoRectMesh" NumberOfElements="101 101 101"/>
+       <Geometry GeometryType="ORIGIN_DXDYDZ">
+        <DataItem DataType="Float" Dimensions="3" Format="XML">
+          -5 -5 -5
+        </DataItem>
+        <DataItem DataType="Float" Dimensions="3" Format="XML">
+          0.1 0.1 0.1
+        </DataItem>
+      </Geometry>
+      <Attribute Name="mydata" AttributeType="Scalar" Center="Node">
+        <DataItem Dimensions="101 101 101" NumberType="Float"
+         Precision="8" Format="HDF">
+          /home/juhaj/tmp2/HPC_course/files/hdf5_visualisation_example60xpm2xq.h5:/mydataset
+        </DataItem>
+      </Attribute>
+    </Grid>
+  </Domain>
+</Xdmf>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 Notice that the operator stencil touches lattice points (x varies fastest)
 x,y,z-1   => comp + NCOMP*(x   + Nx*(y   + Ny*z-1))

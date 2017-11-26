@@ -7,6 +7,9 @@ access them can be found in the python nodes in =modules= directory.
 
 Some familiarity with the unix shell is also necessary.
 
+A training environment is available at =slurmcluster01.westeurope.cloudapp.azure.com= using the usernames and
+passwords provided. Further instructions on how to use that during the course as we need them.
+
 ** Github
 You will also need a github account to do some of the exercises: just accessing the material is possible
 without an account, but as some exercises require modifying a repository, an account is needed. Please surf to

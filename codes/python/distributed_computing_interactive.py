@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 try:
     if (directview):
         pass
 except:
     import ipyparallel
-    c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
+    c = ipyparallel.Client(profile="mpi_slurm", cluster_id="Azure_cluster_0")
     directview=c[:]
     directview.block=True
     with directview.sync_imports():

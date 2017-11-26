@@ -10,14 +10,14 @@ Jupyter
 -   load the module environment for the course
     -   `export MODULEPATH=/alt/applic/modules/modulefiles-easybuild/all`
 -   load the relevant modules:
-    -   `module load petsc4py IPython ipyparallel`
+    -   `module load petsc4py IPython ipyparallel matplotlib`
 -   go to the directory where your copy of the course repository sits
 -   `jupyter notebook --no-browser`
 -   note
     -   you need to punch a hole in the firewall between CATAM and Maths if you want to use a browser on the CATAM machine to access this
     -   if you remove `--no-browser` from the command, it will try to send a browser window from Maths to CATAM
         -   it may work but even if it does, it may be unusably slow
-    -   sorry about that, a better solution is in the works
+    -   if sitting at the desktop, it works fine without `--no-browser` and of course there is no need to punch any holes
 
 Data Structures: lists, tuples, dicts
 -------------------------------------
@@ -256,19 +256,19 @@ for i in range(0,4): print(str(i), end=", ")
 ```
 
 ``` python
-print([i for i in range(0,4)])
+print([i**2 for i in range(0,4)])
 ```
 
 ``` python
-print([str(i) for i in range(0,4)])
+print([str(i**2) for i in range(0,4)])
 ```
 
 ``` python
-for i in range(4): print(str(i), end=", ")
+for i in range(4): print(str(i**2), end=", ")
 ```
 
 ``` python
-print(','.join([str(i) for i in range(0,4)]))
+print(','.join([str(i**2) for i in range(0,4)]))
 ```
 
 -   there are others, see the [tutorial for python 3](https://docs.python.org/3/tutorial/)
@@ -316,7 +316,7 @@ print(findzeros.__doc__)
 ``` python
 import urllib
 import urllib.request
-def get_url(url='http://www.cam.ac.uk/'):
+def get_url(url='http://www.damtp.cam.ac.uk/'):
     data=[]
     with urllib.request.urlopen(url) as response:
         charset = response.headers.get_content_charset()
@@ -438,9 +438,20 @@ def joinstr(x,y):
 Exercises
 ---------
 
+### Timing your code and doing it right
+
+Write two different ways of multiplying numpy matrices: one with naïve for loops, one with built-in numpy operations.
+
+Instructions: assuming you created matrices called `A` and `B`, use `%timeit A*B` and `%timeit
+your_routine(A,B)` to measure the time it takes to run the two matrix multiplications. Use small matrices: you should not need more than 100x100 to see some differences.
+
+Which way of doing things is better? Much? How about at 1000x1000?
+
 ### Random walkers
 
 Write a code where two people perform a random walk along a rectangular `10x10` grid of coordinates, stopping when the hit (occupy same coordinates) each other for the first time.
+
+What is the asymptotic mean free path for such walkers? Or, equivalently, what the expectation value of steps taken before meeting.
 
 Good Programming Practice: modularity
 -------------------------------------
@@ -480,7 +491,9 @@ print("The variable MyModule.module_internal_variable has the value "+str(MyModu
 
 ``` python
 import subprocess
-subprocess.Popen(["python", "codes/python/ImportMyModule.py"]).wait()
+p=subprocess.Popen(["python", "../codes/python/ImportMyModule.py"])
+if (p.wait()==0): print("Success!")
+else: print("Failed!")
 ```
 
 -   the search path is partially system dependent, but there's always `PYTHONPATH` which is searched before the system depedent path, so we can fix this
@@ -522,7 +535,7 @@ Some standard modules
 
 ``` python
 import re
-re.sub(r'(\b[a-z]+ )(\1)+', r'\1', 'please remove repeated repeated repeated words')
+re.sub(r'(\b[a-z]+ )(\1)+', r'\1', 'please remove repeated repeated repeated words words words from this')
 ```
 
 `urllib`  
@@ -803,6 +816,7 @@ print(newres==oldres)
 
 -   a better version of this is to use a *closure*: a function object that remembers values in enclosing scopes regardless of whether those scopes are still present in memory
     -   I'm lying of course: they are still in memory but there is no other way to access them
+-   variables in the enclosed function which are defined in the outer function are *read-only* unless defined non-local by `nonlocal variablename`
 
 ``` python
 def HigherOrder(param):
@@ -901,6 +915,31 @@ Exercises
 ### A tree using classes
 
 -   Create to a family tree for `magpie` which contains parent class instances
+
+### Closure
+
+Write a closure which provides you with a counter-function which remembers its state. It should take the initial value as a parameter and return that on the first call, incrementing by 1 for every further call.
+
+Your counter-maker and associated enclosed function must pass the following doctests:
+
+``` python
+>>> new_counter1 = make_counter(42)
+>>> new_counter2 = make_counter(42)
+>>> print(new_counter1())
+42
+>>> print(new_counter2())
+42
+>>> print(new_counter1())
+43
+>>> print(new_counter2())
+43
+>>> print(new_counter2())
+44
+>>> print(new_counter1())
+44
+```
+
+Note that you can actually save these to a file and read them in with doctest once you have the `make_counter` function defined if you feel adventurous.
 
 ### Fibonacci
 

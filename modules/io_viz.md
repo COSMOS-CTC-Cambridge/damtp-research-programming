@@ -149,8 +149,9 @@ print("Are they equal? " + ["No!", "Yes!"][vec1.equal(vec2)])
 ```
 
 -   if you run this in parallel using parallel HDF5 library, you just got all the hard bits for free
+    -   available as `codes/python/petsc_hdf5_viewer.py`
 -   and a similar example in `h5py`
--   note that running this in the frontend uses just one rank
+-   note that running these in the frontend uses just one rank
 
 ``` python
 import mpi4py
@@ -174,7 +175,7 @@ f.close()
 
 ``` python
 %%bash
-mpirun -np 4 python ../codes/python/parallel_io_h5py.py
+srun --ntasks 4 python3 ../codes/python/parallel_io_h5py.py
 ```
 
 -   performance might still be bad, because
@@ -187,16 +188,13 @@ Know your filesystem
     -   one often needs to set up a special directory on Lustre for very high bandwidth operations
     -   files are *striped* onto different pieces of hardware (OSTs) to increase bandwidth
     -   can be tricky as both the number of active OSTs and number of writers in code affect the bandwidth
--   on machines like COSMOS the filesystem is CXFS, which is not like Lustre
-    -   no performance benefit from single-file parallel I/O
-    -   multi-file parallel I/O is better
-    -   for Lustre users our CXFS has fixed stripe of 2
+-   others have similar properties
 
 Checkpointing
 -------------
 
 -   Your code should be able to do this on its own to support solving the problem by running the code several times: often not possible to obtain access to a computer for long enough to solve in one go.
--   Basically, you save your iterate or current best estimate solution and later load it from file instead of using random or hard coded initial conditions.
+-   Basically, you save your iterate or current best estimate solution and later load it from file as initial condition instead of using random or hard coded initial conditions.
 
 Simple Visualisation
 ====================
@@ -238,14 +236,12 @@ pylab.legend()
 # This file contains a bunch of point particles of varying locationg, speeds, 
 # masses and charges
 X Y   Z   Vx  Vy  Vz  mass    charge
-0 0   0   0   0   0.1 100.0   0.0
+0 0   0   0   0   1.1 100.0   0.0
 1.0   0   4   0   10.0    0   10.0    -1.0
-0 2   0   0.1 0   0.1 1000.0  0.0
-2 2   -3  0.1 0   0.1 100.0   1.0
+0 2   0   0.1 0   1.1 1000.0  0.0
+2 2   -3  0.1 0   1.1 100.0   1.0
 # A comment line
 ```
-
--   then let's have a look at it and save it to another file called `../files/genfromtxt_example_data.png`
 
 ``` python
 infile = "../files/genfromtxt_example_data.txt"

@@ -1,0 +1,14 @@
+>>> new_counter1 = make_counter(42)
+>>> new_counter2 = make_counter(42)
+>>> print(new_counter1())
+42
+>>> print(new_counter2())
+42
+>>> print(new_counter1())
+43
+>>> print(new_counter2())
+43
+>>> print(new_counter2())
+44
+>>> print(new_counter1())
+44

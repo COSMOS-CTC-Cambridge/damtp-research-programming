@@ -1,6 +1,19 @@
 Message Passing Interface
 =========================
 
+Logging in and accessing the Microsoft Azure Cloud HPC cluster
+--------------------------------------------------------------
+
+1.  Get your username and password — don't lose them
+2.  Use ssh to log into `slurmcluster01.westeurope.cloudapp.azure.com` using your username and password.
+3.  Change directory to `/share/data/yourusername`
+4.  Clone the course repo `git clone git@github.com:juhaj/damtp-research-programming.git`
+5.  Start your copy of jupyter: `my_jupyter`
+6.  Make note of the URL (or just token) presented
+7.  Replace the `localhost` bit of the URL with `http://slurmcluster01.westeurope.cloudapp.azure.com`
+8.  Point your browser there (note that the whole Cambridge course material up to yesterday's lecture is there, have fun).
+9.  Feel free to poke around nicely and use jupyter, python, C, C++, whatever; you should use `srun` for MPI jobs
+
 Parallel Processing
 -------------------
 
@@ -99,15 +112,15 @@ print("Hello, World. I am rank "+
 
 ``` python
 %%bash
-mpirun -np 23 python ../codes/python/mpi_hello_world_worst.py
+srun --ntasks 23 python3 ../codes/python/mpi_hello_world_worst.py
 ```
 
--   There is no easy way to run interactive MPI jobs with python except with a module called `ipyparallel` \[fn:dask<sub>workstoofootnote</sub>: Dask will also work but it's more complicated and its delayed execution model is quite alien to the typical MPI usage so we skip it here.\]
-    -   we will look at it in a moment
--   If you do not believe interactive MPI is no fun, this is how to do it:
-
-=mpirun -np 8 xterm -e python=
-
+-   There is no easy way to run interactive MPI jobs
+    -   it is inherently non-sequential and interactivity with humans is inherently sequential
+-   however, there's a python module called `ipyparallel` \[fn:dask<sub>workstoofootnote</sub>: Dask will also work but it's more complicated and its delayed execution model is quite alien to the typical MPI usage so we skip it here.\] which gives some level of interactivity
+    -   but the non-sequential nature of parallel jobs bring some complications when a sequential interface is built on top of it
+    -   we will look at this in a moment
+-   If you do not believe interactive MPI is no fun, this is how to do it: `srun --ntasks 8 xterm -e python3`
 -   You end up with 8 separate terminal windows and every single python command must be typed in ALL of them.
 -   There are terminal multiplexers which can take one input and replicate it to N terminals, but you still end up with N+1 terminal windows.
 
@@ -117,7 +130,7 @@ mpirun -np 23 python ../codes/python/mpi_hello_world_worst.py
 %%bash
 cat ../codes/cpp/hello.cpp
 mpicxx -o hello ../codes/cpp/hello.cpp
-mpirun -np 23 ./hello
+srun --ntasks 23 ./hello
 ```
 
 ### The ipyparallel module
@@ -138,31 +151,20 @@ This will make sure the environment for parallel processing using ipyparallel ex
 
 ``` python
 %%bash
-echo Executing some setup...
-if ! [ -d ${HOME}/.ipython/profile_mpi ]
-then
-    ipython3 profile create --parallel --profile=mpi
-fi
-if ! grep -q "^c.IPClusterEngines.engine_launcher_class = " ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-then
-    cat >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py << EOF 
-c.IPClusterEngines.engine_launcher_class = 'MPI'
-EOF
-fi
-if ! grep -q "c.BaseParallelApplication.cluster_id = 'training_cluster_0'" ${HOME}/.ipython/profile_mpi/ipcluster_config.py
-then
-    cat >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py << EOF 
-c.BaseParallelApplication.cluster_id = 'training_cluster_0'
-EOF
-fi
-ipcluster start -n 4 --engines=MPI --profile=mpi --cluster-id=training_cluster_0 --daemon=True
+ipcluster stop --profile=mpi_slurm --cluster-id='Azure_cluster_0'
+sleep 5
+```
+
+``` python
+%%bash
+ipcluster start --profile=mpi_slurm -n 8 --engines=MPI --cluster-id='Azure_cluster_0' --ip='10.0.0.254' --MPIEngineSetLauncher.mpi_cmd='["srun"]' --daemon=True
 ```
 
 and
 
 ``` python
 import ipyparallel
-c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
+c = ipyparallel.Client(profile="mpi_slurm", cluster_id='Azure_cluster_0')
 ```
 
 -   By default, `ipyparallel` has no modules imported and
@@ -208,26 +210,47 @@ c[1:3].map_sync(lambda x:x+1, data)
 
 ### In interactive python (ipyparallel)
 
+-   initialise
+
 ``` python
 import ipyparallel as ipp
-c = ipp.Client(profile="mpi", cluster_id="training_cluster_0")
+c = ipp.Client(profile="mpi_slurm", cluster_id="Azure_cluster_0")
 c.ids
 directview=c[:]
 directview.execute("import mpi4py").wait()
 directview.execute("from mpi4py import MPI").wait()
+```
+
+-   pass some data to workers asynchronously, let them do their work, gather results and output
+
+``` python
 res1=directview.apply_async(
-    lambda : "Hello, World. I am rank "+
-    "{rank: 0{len}d} of your MPI communicator of {size} ranks".format(
+    lambda data: "Hello, World. I am rank "+
+    "{rank: 0{len}d} of your MPI communicator of {size} ranks and was sent data\n{d}".format(
         rank=MPI.COMM_WORLD.Get_rank(),
         len=len(str(MPI.COMM_WORLD.Get_size())),
-        size=MPI.COMM_WORLD.Get_size()))
-
+        size=MPI.COMM_WORLD.Get_size(), d=str(data)),
+        data)
 lista = [x for x in res1.result()]
 for output in lista: print(output)
 ```
 
--   why the annoying try-except-finally at the end?
-    -   some versions of `ipyparallel` have a method `result` some an iterator `result`, unfortunately
+-   or using `map` of the Map/Reduce fame
+
+``` python
+res1=directview.map(
+    lambda data: "Hello, World. I am rank "+
+    "{rank: 0{len}d} of your MPI communicator of {size} ranks and was sent data:\n{d}".format(
+        rank=MPI.COMM_WORLD.Get_rank(),
+        len=len(str(MPI.COMM_WORLD.Get_size())),
+        size=MPI.COMM_WORLD.Get_size(), 
+        d=data),
+        data)
+lista = [x for x in res1.result()]
+for output in lista: print(output)
+```
+
+-   note the clean output: none of the output is generated at the workers, all is done at the frontend
 
 Basic messaging calls in C
 --------------------------
@@ -313,6 +336,33 @@ For simple Cartesian data distribution MPI has good support routines
 
 `MPI_Cart_shift`  
 (Shift) who's rank's neighbour in given Cartesian direction
+
+First look at MPI
+-----------------
+
+-   We run this with precisely two workers so as to keep things simple
+    -   This illustrates how to send and receive messages
+    -   This is not the way you want to do things in practice!
+
+``` python
+@directview.remote(block=False)
+def sendrecv():
+    import mpi4py
+    from mpi4py import MPI
+    import numpy
+    databuf = numpy.random.random(5)
+    recvbuf = numpy.zeros_like(databuf)
+    recv=MPI.COMM_WORLD.Irecv(buf=[recvbuf, databuf.shape[0], MPI.DOUBLE], source=MPI.COMM_WORLD.Get_rank() ^ 0x1, tag=42)
+    send=MPI.COMM_WORLD.Isend(buf=[databuf, databuf.shape[0], MPI.DOUBLE], dest=MPI.COMM_WORLD.Get_rank() ^ 0x1, tag=42)
+    error=MPI.Request.Waitall([send,recv])
+    for rank in range(0,MPI.COMM_WORLD.Get_size()):
+        if (MPI.COMM_WORLD.Get_rank() == rank):
+            print("I, rank {}, sent\n".format(rank), databuf, "\nand received\n", recvbuf)
+    return
+ret=sendrecv()
+ret.wait()
+ret.display_outputs()
+```
 
 Map/Reduce with and without MPI
 -------------------------------
@@ -406,7 +456,7 @@ Running the equivalent code non-interactively does not cause such funny output s
 ``` bash
 %%bash
 cat ../codes/python/mapreduce.py
-mpirun -np 8 python -- ../codes/python/mapreduce.py
+srun --ntasks 8 python3 -- ../codes/python/mapreduce.py
 ```
 
 Distributed Computing
@@ -436,7 +486,7 @@ try:
         pass
 except:
     import ipyparallel
-    c = ipyparallel.Client(profile="mpi", cluster_id="training_cluster_0")
+    c = ipyparallel.Client(profile="mpi_slurm", cluster_id="Azure_cluster_0")
     directview=c[:]
     directview.block=True
     with directview.sync_imports():
@@ -918,6 +968,20 @@ results.display_outputs()
     -   **allows development of real parallel batch codes in ipyparallel/ipython/notebook environment**
     -   if there is any concern of the effect of the wrappers on performance, one can just remove the compatibility layer
     -   this version is available at `codes/python/distributed_computing_batch.py`
+
+Interlude: *slurm* Batch Jobs
+-----------------------------
+
+-   you will have noticed the command *srun* in the examples: that tells the cluster to execute the rest of the command line on the *compute nodes*
+-   due to problems on the cluster, we'll now see cases where srun says `srun: job 23 queued and waiting for resources`
+    -   it will stay in a job *queue* until such a time when there are enough resources
+    -   it will then execute normally
+    -   there is now a 2-minute time limit on the jobs to make sure turnaround time is quick enough for the exercises
+    -   please also do all your testing with 2-4 ranks, only (that's the value of the `--ntasks` parameter)
+    -   this also means running `ipyparallel` and `ipcluster` is impractical, sorry
+-   you'll find lots of example codes in the `codes/python` directory in the repo
+    -   feel free to use those, some of those are the codes from lecture notes, some are example solutions, some are examples of how not to do things and some are stuff yet to be covered on the lectures
+    -   they should help you get the below done
 
 Exercises
 ---------
